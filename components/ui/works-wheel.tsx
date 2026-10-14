@@ -34,6 +34,8 @@ export interface WorksWheelProps extends Omit<
   label?: string;
   /** Label on the card's action affordance. @default "Enquire Now" */
   action?: string;
+  /** Callback when user clicks to inquire or explore an item */
+  onItemAction?: (item: WorksWheelItem) => void;
 }
 
 const CARD_H = 0.46; // front card height, of the stage
@@ -83,6 +85,7 @@ export function WorksWheel({
   items,
   label = "Our Services",
   action = "Enquire Now",
+  onItemAction,
   className,
   ...props
 }: WorksWheelProps) {
@@ -270,10 +273,16 @@ export function WorksWheel({
                   role="option"
                   aria-selected={i === active}
                   href={item.href}
+                  onClick={(e: React.MouseEvent) => {
+                    if (onItemAction) {
+                      e.preventDefault();
+                      onItemAction(item);
+                    }
+                  }}
                   ref={(node: HTMLElement | null) => {
                     cardRefs.current[i] = node;
                   }}
-                  className="group absolute [backface-visibility:hidden] no-underline"
+                  className="group absolute [backface-visibility:hidden] no-underline cursor-pointer"
                   style={{
                     width: metrics.cardW,
                     height: metrics.cardH,

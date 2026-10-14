@@ -68,7 +68,7 @@ function getSlotConfig(totalCards: number, slot: number) {
 }
 
 const ARROW_CLASSES =
-  "relative flex items-center justify-center rounded-full border-[1.5px] border-black/10 dark:border-white/10 bg-black/5 dark:bg-white/5 backdrop-blur-[16px] text-black/40 dark:text-white/55 cursor-pointer shrink-0 z-30 outline-none shadow-[0_4px_20px_rgba(0,0,0,0.1)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.4)] hover:border-black/25 dark:hover:border-white/25 hover:text-black/70 dark:hover:text-white/80 active:opacity-70 transition-colors duration-300 before:content-[''] before:absolute before:inset-[3px] before:rounded-full before:border before:border-black/[0.04] dark:before:border-white/[0.04] before:pointer-events-none";
+  "fan-arrow-btn relative flex items-center justify-center rounded-full bg-white text-[#26382B] border border-[#26382B]/20 shadow-md hover:bg-[#26382B] hover:text-white hover:border-[#26382B] transition-all duration-300 cursor-pointer shrink-0 z-30 outline-none";
 
 export function SocialCards({ cards }: SocialCardsProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -250,10 +250,30 @@ export function SocialCards({ cards }: SocialCardsProps) {
     };
   }, [centerIndex, totalCards, getVisibleMap, needsPagination]);
 
-  if (!totalCards) return null;
+  if (!totalCards) {
+    return (
+      <section className="flex flex-col items-center w-full py-6 lg:py-10 px-4 md:px-8 relative z-20">
+        <div className="flex items-center justify-center w-full max-w-[90rem]">
+          <div className="fan-layout flex relative justify-center items-center w-full max-w-[80rem]">
+            <div className="flex flex-col items-center justify-center p-8 md:p-12 text-center max-w-lg mx-auto rounded-3xl border-2 border-dashed border-[#C5A059]/40 bg-white/70 backdrop-blur-md shadow-sm">
+              <div className="w-16 h-16 rounded-full bg-[#FAF6ED] flex items-center justify-center text-3xl mb-4 text-[#C5A059]">
+                ✨
+              </div>
+              <h3 className="text-xl md:text-2xl font-serif font-bold text-[#26382B] mb-2">
+                Real Event Stage Showcase
+              </h3>
+              <p className="text-sm md:text-base text-[#5C6A60] leading-relaxed max-w-sm mb-2">
+                Grand stage backdrops, fresh floral artistry, and concert-grade decors handcrafted across Coimbatore.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   const chevron = (direction: "left" | "right") => (
-    <svg className="relative z-[2] w-4 h-4 md:w-5 md:h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg className="relative z-[2] w-5 h-5 md:w-6 md:h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round">
       <polyline points={direction === "left" ? "15 18 9 12 15 6" : "9 18 15 12 9 6"} />
     </svg>
   );
@@ -278,16 +298,40 @@ export function SocialCards({ cards }: SocialCardsProps) {
       </div>
 
       {needsPagination && (
-        <div className="flex items-center justify-center gap-4 mt-4 md:mt-6 z-30">
-          <button className={`${ARROW_CLASSES} w-10 h-10 md:w-12 md:h-12`} onClick={() => cycle("left")} aria-label="Previous">
+        <div className="flex items-center justify-center gap-4 mt-6 md:mt-8 z-30">
+          <button
+            type="button"
+            className={`${ARROW_CLASSES} w-11 h-11 md:w-12 md:h-12`}
+            onClick={() => cycle("left")}
+            aria-label="Previous backdrop"
+          >
             {chevron("left")}
           </button>
           <div className="flex items-center gap-2">
             {cards.map((_, i) => (
-              <span key={i} className={`w-2 h-2 rounded-full transition-all duration-300 ${i === centerIndex ? "bg-black/70 dark:bg-white/80 scale-[1.3]" : "bg-black/15 dark:bg-white/15"}`} />
+              <button
+                key={i}
+                type="button"
+                onClick={() => {
+                  if (isAnimating.current || i === centerIndex) return;
+                  directionRef.current = i > centerIndex ? "right" : "left";
+                  setCenterIndex(i);
+                }}
+                className={`transition-all duration-300 rounded-full cursor-pointer border-none p-0 outline-none ${
+                  i === centerIndex
+                    ? "w-6 h-2.5 bg-[#C5A059] shadow-[0_2px_8px_rgba(197,160,89,0.5)]"
+                    : "w-2.5 h-2.5 bg-[#26382B]/25 hover:bg-[#26382B]/50"
+                }`}
+                aria-label={`Go to slide ${i + 1}`}
+              />
             ))}
           </div>
-          <button className={`${ARROW_CLASSES} w-10 h-10 md:w-12 md:h-12`} onClick={() => cycle("right")} aria-label="Next">
+          <button
+            type="button"
+            className={`${ARROW_CLASSES} w-11 h-11 md:w-12 md:h-12`}
+            onClick={() => cycle("right")}
+            aria-label="Next backdrop"
+          >
             {chevron("right")}
           </button>
         </div>

@@ -1,52 +1,187 @@
 [
   {
+    "id": "bd-1792000066265",
+    "title": "Entrance",
+    "category": "Decor Flowers",
+    "image": "https://uejxcapocwrlhbulxomu.supabase.co/storage/v1/object/public/uploads/1792000063814-IMG20250823092925.jpg",
+    "description": "",
+    "dimensions": "24ft x 12ft (Customizable)",
+    "idealFor": "Weddings, Receptions",
+    "included": [
+      "Full Floral Arch",
+      "Stage Lights",
+      "Velvet Sofa"
+    ],
+    "createdAt": "2026-10-14T17:47:46.265Z"
+  },
+  {
+    "id": "bd-1791999990362",
+    "title": "Red Rose",
+    "category": "Bouquet",
+    "image": "https://uejxcapocwrlhbulxomu.supabase.co/storage/v1/object/public/uploads/1791999989892-IMG-20250606-WA0336.jpg",
+    "description": "",
+    "dimensions": "24ft x 12ft (Customizable)",
+    "idealFor": "Weddings, Receptions",
+    "included": [
+      "Full Floral Arch",
+      "Stage Lights",
+      "Velvet Sofa"
+    ],
+    "createdAt": "2026-10-14T17:46:30.362Z"
+  },
+  {
+    "id": "bd-1791999938223",
+    "title": "Jasime",
+    "category": "Garland",
+    "image": "https://uejxcapocwrlhbulxomu.supabase.co/storage/v1/object/public/uploads/1791999937472-IMG-20240816-WA0415.jpg",
+    "description": "",
+    "dimensions": "24ft x 12ft (Customizable)",
+    "idealFor": "Weddings, Receptions",
+    "included": [
+      "Full Floral Arch",
+      "Stage Lights",
+      "Velvet Sofa"
+    ],
+    "createdAt": "2026-10-14T17:45:38.223Z"
+  },
+  {
+    "id": "bd-1791999911853",
+    "title": "Inova",
+    "category": "Professional Audio Systems",
+    "image": "https://uejxcapocwrlhbulxomu.supabase.co/storage/v1/object/public/uploads/1791999911054-IMG-20241118-WA0000.jpg",
+    "description": "",
+    "dimensions": "24ft x 12ft (Customizable)",
+    "idealFor": "Weddings, Receptions",
+    "included": [
+      "Full Floral Arch",
+      "Stage Lights",
+      "Velvet Sofa"
+    ],
+    "createdAt": "2026-10-14T17:45:11.853Z"
+  },
+  {
+    "id": "bd-1791999891079",
+    "title": "Baloons",
+    "category": "School & College Events",
+    "image": "https://uejxcapocwrlhbulxomu.supabase.co/storage/v1/object/public/uploads/1791999890204-IMG-20250317-WA0116.jpg",
+    "description": "",
+    "dimensions": "24ft x 12ft (Customizable)",
+    "idealFor": "Weddings, Receptions",
+    "included": [
+      "Full Floral Arch",
+      "Stage Lights",
+      "Velvet Sofa"
+    ],
+    "createdAt": "2026-10-14T17:44:51.079Z"
+  },
+  {
+    "id": "bd-1791998119465",
+    "title": "Brass",
+    "category": "Event Management",
+    "image": "https://uejxcapocwrlhbulxomu.supabase.co/storage/v1/object/public/uploads/1791998118242-IMG_5071.JPG",
+    "description": "",
+    "dimensions": "24ft x 12ft (Customizable)",
+    "idealFor": "Weddings, Receptions",
+    "included": [
+      "Full Floral Arch",
+      "Stage Lights",
+      "Velvet Sofa"
+    ],
+    "createdAt": "2026-10-14T17:15:19.465Z"
+  },
+  {
+    "id": "bd-1791998021713",
+    "title": "Royal Jasmine",
+    "category": "Event Management",
+    "image": "https://uejxcapocwrlhbulxomu.supabase.co/storage/v1/object/public/uploads/1791998020228-IMG-20260727-WA0031.jpg",
+    "description": "",
+    "dimensions": "24ft x 12ft (Customizable)",
+    "idealFor": "Weddings, Receptions",
+    "included": [
+      "Full Floral Arch",
+      "Stage Lights",
+      "Velvet Sofa"
+    ],
+    "createdAt": "2026-10-14T17:13:41.713Z"
+  },
+  {
     "id": "bd-1",
     "title": "Royal Dusty Mauve & Rose Mandap",
     "category": "Wedding Decorations",
-    "image": "/uploads/backdrop-1.jpg",
+    "image": "",
     "description": "Grand floral arch crafted with pastel roses, dusty mauve satin drapes, cascading crystal chandeliers, and warm fairy lights.",
     "dimensions": "24ft x 12ft (Customizable)",
     "idealFor": "Luxury Weddings, Receptions & Grand Entrances",
-    "included": ["Floral arch", "Chandeliers", "Sofa set", "Stage lighting", "Side floral pillars"]
+    "included": [
+      "Floral arch",
+      "Chandeliers",
+      "Sofa set",
+      "Stage lighting",
+      "Side floral pillars"
+    ]
   },
   {
     "id": "bd-2",
     "title": "Heritage Jasmine & Brass Bell Mandap",
     "category": "Wedding Decorations",
-    "image": "/uploads/backdrop-2.jpg",
+    "image": "",
     "description": "Traditional South Indian wedding stage with hand-strung Madurai jasmine garlands, carved temple pillars, brass hanging bells, and marigold carpets.",
     "dimensions": "20ft x 14ft",
     "idealFor": "Muhurtham, Traditional Hindu Weddings & Temple Themes",
-    "included": ["Temple carved pillars", "Fresh jasmine strings", "Brass urlis & bells", "Havan kund setup"]
+    "included": [
+      "Temple carved pillars",
+      "Fresh jasmine strings",
+      "Brass urlis & bells",
+      "Havan kund setup"
+    ]
   },
   {
     "id": "bd-3",
     "title": "Sunshine Bohemian Haldi Swing",
     "category": "Wedding Decorations",
-    "image": "/uploads/backdrop-3.jpg",
+    "image": "https://uejxcapocwrlhbulxomu.supabase.co/storage/v1/object/public/uploads/1791999817370-f1c70f5d-a578-4a1e-b4a7-b6d35eee5086.jpg",
     "description": "Vibrant festive setup with wooden swing (jhula), fresh sunflower arches, cascading yellow-orange marigolds, and colorful Bohemian floor cushions.",
     "dimensions": "16ft x 10ft",
     "idealFor": "Haldi Ceremony, Mehendi Celebrations & Sangeet Photocorners",
-    "included": ["Carved wooden jhula", "Sunflower & marigold arch", "Brass pots", "Floor seating cushions"]
+    "included": [
+      "Carved wooden jhula",
+      "Sunflower & marigold arch",
+      "Brass pots",
+      "Floor seating cushions"
+    ],
+    "updatedAt": "2026-10-14T17:43:38.036Z"
   },
   {
     "id": "bd-4",
     "title": "Concert LED Video Wall & Line-Array Stage",
     "category": "LED Wall",
-    "image": "/uploads/backdrop-4.jpg",
+    "image": "https://uejxcapocwrlhbulxomu.supabase.co/storage/v1/object/public/uploads/1792000130276-IMG_20260406_151423.jpg",
     "description": "High-definition P3.9 LED screen backdrop with aluminum truss system, intelligent beam moving heads, and concert-grade line-array sound system.",
     "dimensions": "32ft x 16ft (Modular panels)",
     "idealFor": "College Cultural Fests, Corporate Annual Days & Live Music Events",
-    "included": ["HD LED video wall", "Heavy truss structure", "Moving head beam lights", "Line-array audio system"]
+    "included": [
+      "HD LED video wall",
+      "Heavy truss structure",
+      "Moving head beam lights",
+      "Line-array audio system"
+    ],
+    "updatedAt": "2026-10-14T17:48:51.418Z"
   },
   {
     "id": "bd-5",
     "title": "Chic Golden Ring Floral Arch",
     "category": "Birthday Parties",
-    "image": "/uploads/backdrop-5.jpg",
+    "image": "https://uejxcapocwrlhbulxomu.supabase.co/storage/v1/object/public/uploads/1791999848420-IMG-20241121-WA0005.jpg",
     "description": "Modern circular gold ring frame adorned with lush blush-pink hydrangeas and roses, customized warm neon lettering, and velvet seating.",
     "dimensions": "12ft x 10ft",
     "idealFor": "Engagements, Milestone Birthdays & Baby Showers",
-    "included": ["Circular metal ring", "Floral arrangement", "Custom neon sign", "Plush sofa", "Fairy light backdrop"]
+    "included": [
+      "Circular metal ring",
+      "Floral arrangement",
+      "Custom neon sign",
+      "Plush sofa",
+      "Fairy light backdrop"
+    ],
+    "updatedAt": "2026-10-14T17:44:08.978Z"
   }
 ]

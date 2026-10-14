@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { isAuthorizedAdmin } from '@/lib/adminAuth';
 
 const dataFilePath = path.join(process.cwd(), 'data', 'backdrops.json');
 const uploadDir = path.join(process.cwd(), 'public', 'uploads');
@@ -43,12 +44,25 @@ export async function GET() {
       const { data, error } = await supabase
         .from('backdrops')
         .select('*')
-        .order('createdAt', { ascending: false });
+        .order('createdat', { ascending: false });
 
-      if (!error && Array.isArray(data)) {
-        return NextResponse.json(data);
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const normalized = data.map((b) => ({
+          id: b.id,
+          title: b.title,
+          category: b.category,
+          image: b.image || '',
+          description: b.description || '',
+          dimensions: b.dimensions || '',
+          idealFor: b.idealfor || b.idealFor || '',
+          included: Array.isArray(b.included) ? b.included : [],
+          createdAt: b.createdat || b.createdAt
+        }));
+        return NextResponse.json(normalized);
       }
-      console.warn('Supabase fetch failed or table empty, using local backup:', error?.message);
+      if (error) {
+        console.warn('Supabase fetch failed or table empty, using local backup:', error?.message);
+      }
     } catch (e) {
       console.error('Supabase exception:', e);
     }
@@ -60,6 +74,10 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  if (!isAuthorizedAdmin(request)) {
+    return NextResponse.json({ success: false, error: 'Unauthorized: Admin authentication required.' }, { status: 401 });
+  }
+
   try {
     const formData = await request.formData();
     const title = formData.get('title') || 'Untitled Setup';
@@ -149,9 +167,21 @@ export async function POST(request) {
     // Save to Supabase
     if (isSupabaseConfigured && supabase) {
       try {
+        const supabaseRow = {
+          id: newBackdrop.id,
+          title: newBackdrop.title,
+          category: newBackdrop.category,
+          image: newBackdrop.image || null,
+          description: newBackdrop.description || null,
+          dimensions: newBackdrop.dimensions || null,
+          idealfor: newBackdrop.idealFor || null,
+          included: Array.isArray(newBackdrop.included) ? newBackdrop.included : [],
+          createdat: newBackdrop.createdAt || new Date().toISOString()
+        };
+
         const { error: dbError } = await supabase
           .from('backdrops')
-          .insert([newBackdrop]);
+          .insert([supabaseRow]);
 
         if (dbError) {
           console.warn('Supabase DB insert error:', dbError.message);
@@ -174,6 +204,10 @@ export async function POST(request) {
 }
 
 export async function PUT(request) {
+  if (!isAuthorizedAdmin(request)) {
+    return NextResponse.json({ success: false, error: 'Unauthorized: Admin authentication required.' }, { status: 401 });
+  }
+
   try {
     const formData = await request.formData();
     const id = formData.get('id');
@@ -261,7 +295,17 @@ export async function PUT(request) {
     // Update in Supabase
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('backdrops').update(updated).eq('id', id);
+        const supabaseUpdate = {
+          title: updated.title,
+          category: updated.category,
+          image: updated.image || null,
+          description: updated.description || null,
+          dimensions: updated.dimensions || null,
+          idealfor: updated.idealFor || null,
+          included: Array.isArray(updated.included) ? updated.included : [],
+          updatedat: new Date().toISOString()
+        };
+        await supabase.from('backdrops').update(supabaseUpdate).eq('id', id);
       } catch (e) {
         console.error(e);
       }
@@ -281,6 +325,10 @@ export async function PUT(request) {
 }
 
 export async function DELETE(request) {
+  if (!isAuthorizedAdmin(request)) {
+    return NextResponse.json({ success: false, error: 'Unauthorized: Admin authentication required.' }, { status: 401 });
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

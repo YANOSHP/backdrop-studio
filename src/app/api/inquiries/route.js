@@ -30,10 +30,21 @@ export async function GET() {
       const { data, error } = await supabase
         .from('inquiries')
         .select('*')
-        .order('receivedAt', { ascending: false });
+        .order('receivedat', { ascending: false });
 
-      if (!error && Array.isArray(data)) {
-        return NextResponse.json(data);
+      if (!error && Array.isArray(data) && data.length > 0) {
+        const normalized = data.map((item) => ({
+          id: item.id,
+          name: item.name,
+          phone: item.phone,
+          eventDate: item.eventdate || item.eventDate || '',
+          eventType: item.eventtype || item.eventType || 'General',
+          selectedBackdrop: item.selectedbackdrop || item.selectedBackdrop || '',
+          notes: item.notes || '',
+          status: item.status || 'New',
+          receivedAt: item.receivedat || item.receivedAt || new Date().toISOString()
+        }));
+        return NextResponse.json(normalized);
       }
     } catch (e) {
       console.error('Supabase inquiries fetch exception:', e);
@@ -55,7 +66,36 @@ export async function POST(request) {
 
     if (isSupabaseConfigured && supabase) {
       try {
-        await supabase.from('inquiries').insert([newEntry]);
+        const extraDetails = [
+          body.venueName ? `Venue: ${body.venueName}${body.venueCity ? `, ${body.venueCity}` : ''}` : '',
+          body.venueType ? `Type: ${body.venueType}` : '',
+          body.venueSetting ? `Setting: ${body.venueSetting}` : '',
+          body.stageDimensions ? `Stage: ${body.stageDimensions}` : '',
+          body.budget ? `Budget: ${body.budget}` : '',
+          body.email ? `Email: ${body.email}` : ''
+        ].filter(Boolean).join(' | ');
+
+        const combinedNotes = [
+          body.notes || '',
+          extraDetails ? `[Details: ${extraDetails}]` : ''
+        ].filter(Boolean).join('\n');
+
+        const supabaseRow = {
+          id: newEntry.id,
+          name: newEntry.name,
+          phone: newEntry.phone,
+          eventdate: newEntry.eventDate || null,
+          eventtype: newEntry.eventType || 'General',
+          selectedbackdrop: newEntry.selectedBackdrop || 'General Inquiry',
+          notes: combinedNotes || null,
+          status: newEntry.status || 'New',
+          receivedat: newEntry.receivedAt
+        };
+
+        const { error: inqErr } = await supabase.from('inquiries').insert([supabaseRow]);
+        if (inqErr) {
+          console.warn('Supabase inquiries insert error:', inqErr.message);
+        }
       } catch (e) {
         console.error('Supabase inquiries insert error:', e);
       }

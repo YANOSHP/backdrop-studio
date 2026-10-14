@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 import { supabase, isSupabaseConfigured } from '@/lib/supabase';
+import { isAuthorizedAdmin } from '@/lib/adminAuth';
 
 const companyFilePath = path.join(process.cwd(), 'data', 'company.json');
 
@@ -46,6 +47,10 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  if (!isAuthorizedAdmin(request)) {
+    return NextResponse.json({ success: false, error: 'Unauthorized: Admin authentication required.' }, { status: 401 });
+  }
+
   try {
     const updated = await request.json();
     const current = getLocalCompanyData();

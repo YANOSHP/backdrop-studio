@@ -5,6 +5,8 @@ import Link from 'next/link';
 import { CATEGORIES } from '@/lib/categories';
 import SocialCards from '@/components/ui/card-fan-carousel';
 import WorksWheel from '@/components/ui/works-wheel';
+import ContactCallModal from '@/components/ui/ContactCallModal';
+import { COMPANY_CONTACT, buildWhatsAppQuoteUrl } from '@/lib/whatsapp';
 
 export default function Home() {
   const [backdrops, setBackdrops] = useState([]);
@@ -13,8 +15,9 @@ export default function Home() {
     tagline: 'Grand Stage Backdrops, Fresh Floral Artistry & Concert-Grade AV Setup',
     city: 'Coimbatore, Tamil Nadu',
     address: 'Shop No.B6, Poomarket, Coimbatore - 641001.',
-    phone: '8098415066',
+    phone: '+91 80984 15066',
     whatsapp: '918098415066',
+    instagram: 'flow_erspot_events',
     workingHours: 'Open Every Day: 24/7',
     experienceYears: '6+',
     completedEvents: '500+',
@@ -23,10 +26,108 @@ export default function Home() {
 
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [activeModalBackdrop, setActiveModalBackdrop] = useState(null);
+  const [carouselItems, setCarouselItems] = useState([]);
+
+  // Call Modal State
+  const [isCallModalOpen, setIsCallModalOpen] = useState(false);
+
+  const handleOpenCallModal = () => {
+    setIsCallModalOpen(true);
+  };
+
+  const instagramHandle = company.instagram
+    ? company.instagram.replace(/^@/, '').replace(/https?:\/\/(www\.)?instagram\.com\/?/, '').replace(/\/$/, '')
+    : 'flow_erspot_events';
+
+  const instagramUrl = company.instagram && company.instagram.startsWith('http')
+    ? company.instagram
+    : `https://www.instagram.com/${instagramHandle}/`;
+
+  // Instagram Reels items dynamically powered by real studio setups
+  const instagramReels = [
+    {
+      id: 'reel-1',
+      title: 'Grand Royal Muhurtham Mandap',
+      tag: 'Muhurtham • Traditional',
+      location: 'Codissia Hall, Coimbatore',
+      views: '18.4K',
+      image: carouselItems[0]?.imageUrl || ''
+    },
+    {
+      id: 'reel-2',
+      title: 'Heritage Jasmine & Lotus Temple Stage',
+      tag: 'Fresh Flowers • Scented',
+      location: 'Sri Krishna Mahal, Coimbatore',
+      views: '24.1K',
+      image: carouselItems[1]?.imageUrl || ''
+    },
+    {
+      id: 'reel-3',
+      title: 'Concert LED Video Wall & Sharpy Beams',
+      tag: 'LED Wall • Sangeet Night',
+      location: 'The Residency Towers, Coimbatore',
+      views: '32.8K',
+      image: carouselItems[2]?.imageUrl || ''
+    },
+    {
+      id: 'reel-4',
+      title: 'Marigold Bohemian Haldi Swing & Dhol',
+      tag: 'Haldi & Mehendi • Daytime',
+      location: 'Private Villa, Pollachi',
+      views: '15.9K',
+      image: carouselItems[3]?.imageUrl || ''
+    },
+    {
+      id: 'reel-5',
+      title: 'Pastel Floral Arch Reception Walkway',
+      tag: 'Reception • Luxury Walkway',
+      location: 'Le Méridien, Coimbatore',
+      views: '29.3K',
+      image: carouselItems[4]?.imageUrl || ''
+    }
+  ];
+
+  /**
+   * Smoothly navigates to the "Get Instant Quote" section on the page,
+   * pre-fills the requested service / backdrop, and focuses the form.
+   */
+  const navigateToQuote = (service = '', backdropTitle = '', note = '') => {
+    // Reset submitted state so the form is visible and interactive
+    setQuoteSubmitted(false);
+
+    if (service) {
+      const matched = CATEGORIES.find(
+        (c) => c.name.toLowerCase() === service.toLowerCase()
+      );
+      setQuoteType(matched ? matched.name : service);
+    }
+
+    if (backdropTitle) {
+      setQuoteSelectedBackdrop(backdropTitle);
+    }
+
+    if (note) {
+      setQuoteNotes((prev) => (prev ? `${prev}\n${note}` : note));
+    }
+
+    if (typeof document !== 'undefined') {
+      const quoteSection = document.getElementById('quote');
+      if (quoteSection) {
+        quoteSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setTimeout(() => {
+          const nameInput = document.getElementById('quote-name-input');
+          if (nameInput) {
+            nameInput.focus();
+          }
+        }, 500);
+      }
+    }
+  };
 
   // Quote Form State
   const [quoteName, setQuoteName] = useState('');
   const [quotePhone, setQuotePhone] = useState('');
+  const [quoteEmail, setQuoteEmail] = useState('');
   const [quoteDate, setQuoteDate] = useState('');
   const [quoteType, setQuoteType] = useState('Wedding Decorations');
   const [quoteSelectedBackdrop, setQuoteSelectedBackdrop] = useState('');
@@ -37,20 +138,31 @@ export default function Home() {
   const [quoteVenueSetting, setQuoteVenueSetting] = useState('Indoor AC Hall');
   const [quoteStageDimensions, setQuoteStageDimensions] = useState('');
   const [quoteVenueLandmark, setQuoteVenueLandmark] = useState('');
+  const [quoteBudget, setQuoteBudget] = useState('');
   const [quoteNotes, setQuoteNotes] = useState('');
   const [quoteSubmitted, setQuoteSubmitted] = useState(false);
+  const [submittedWhatsAppUrl, setSubmittedWhatsAppUrl] = useState('');
+  const [submittedRawMessage, setSubmittedRawMessage] = useState('');
+  const [copiedQuoteMessage, setCopiedQuoteMessage] = useState(false);
+  const [minEventDate, setMinEventDate] = useState('');
 
   useEffect(() => {
+    // Set minimum event date on client mount to avoid unstable prerender dates
+    setMinEventDate(new Date().toISOString().split('T')[0]);
+
     async function loadData() {
       try {
-        const [bdRes, compRes] = await Promise.all([
+        const [bdRes, compRes, carRes] = await Promise.all([
           fetch('/api/backdrops'),
-          fetch('/api/company')
+          fetch('/api/company'),
+          fetch('/api/carousel')
         ]);
         const bdData = await bdRes.json();
         const compData = await compRes.json();
+        const carData = await carRes.json();
         if (Array.isArray(bdData)) setBackdrops(bdData);
         if (compData && compData.name) setCompany(compData);
+        if (Array.isArray(carData)) setCarouselItems(carData);
       } catch (err) {
         console.error('Failed to load website data:', err);
       }
@@ -58,31 +170,14 @@ export default function Home() {
     loadData();
   }, []);
 
-  // Prepare cards for the Card Fan Carousel (supports 50+ photos as uploaded)
-  const uploadedCards = backdrops
-    .filter((b) => b.image)
-    .map((b) => ({
-      imgUrl: b.image,
-      alt: b.title,
-      linkUrl: '#backdrops'
+  // Prepare cards dynamically from admin-uploaded carousel photos
+  const carouselCards = carouselItems
+    .filter((item) => item.active !== false && item.imageUrl)
+    .map((item) => ({
+      imgUrl: item.imageUrl,
+      alt: item.alt || item.title || 'FlowerSpot Stage Setup',
+      linkUrl: item.linkUrl || '#backdrops'
     }));
-
-  const stockFallbackCards = [
-    { imgUrl: '/uploads/backdrop-1.jpg', alt: 'Royal Dusty Mauve Mandap', linkUrl: '#backdrops' },
-    { imgUrl: '/uploads/backdrop-2.jpg', alt: 'Heritage Jasmine Temple Mandap', linkUrl: '#backdrops' },
-    { imgUrl: '/uploads/backdrop-3.jpg', alt: 'Bohemian Haldi Swing Decor', linkUrl: '#backdrops' },
-    { imgUrl: '/uploads/backdrop-4.jpg', alt: 'Concert LED Video Wall Stage', linkUrl: '#backdrops' },
-    { imgUrl: '/uploads/backdrop-5.jpg', alt: 'Golden Ring Floral Arch', linkUrl: '#backdrops' },
-    { imgUrl: 'https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=800&q=80', alt: 'Traditional South Indian Wedding Muhurtham', linkUrl: '#backdrops' },
-    { imgUrl: 'https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=800&q=80', alt: 'Grand Reception Floral Walkway', linkUrl: '#backdrops' },
-    { imgUrl: 'https://images.unsplash.com/photo-1465495976277-4387d4b0b4c6?auto=format&fit=crop&w=800&q=80', alt: 'Floral Arch & Stage Lighting', linkUrl: '#backdrops' },
-    { imgUrl: 'https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=800&q=80', alt: 'Celebration Stage Lighting Truss', linkUrl: '#backdrops' },
-    { imgUrl: 'https://images.unsplash.com/photo-1527529482837-4698179dc6ce?auto=format&fit=crop&w=800&q=80', alt: 'Banquet Hall Floral Styling', linkUrl: '#backdrops' }
-  ];
-
-  const carouselCards = uploadedCards.length >= 7
-    ? uploadedCards
-    : [...uploadedCards, ...stockFallbackCards.slice(uploadedCards.length)];
 
   // Service items for WorksWheel (White theme, NO images, rich service info)
   const servicesWheelItems = CATEGORIES.map((service) => ({
@@ -91,7 +186,7 @@ export default function Home() {
     badge: service.badge,
     description: service.serviceDesc,
     highlights: service.highlights,
-    href: generateWhatsAppUrl(`Hi FlowerSpot! I am inquiring about your ${service.name} service for an upcoming event.`),
+    href: '#services',
   }));
 
   // Filter backdrops when a specific category is chosen
@@ -103,15 +198,10 @@ export default function Home() {
     (c) => c.name.toLowerCase() === selectedCategory.toLowerCase()
   );
 
-  function generateWhatsAppUrl(customText) {
-    const phone = company.whatsapp || '918098415066';
-    const message = customText || `Hello! I would like to inquire about backdrop decorations for my upcoming event.`;
-    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-  }
-
   function handleResetQuote() {
     setQuoteName('');
     setQuotePhone('');
+    setQuoteEmail('');
     setQuoteDate('');
     setQuoteType('Wedding Decorations');
     setQuoteSelectedBackdrop('');
@@ -121,8 +211,12 @@ export default function Home() {
     setQuoteVenueSetting('Indoor AC Hall');
     setQuoteStageDimensions('');
     setQuoteVenueLandmark('');
+    setQuoteBudget('');
     setQuoteNotes('');
     setQuoteSubmitted(false);
+    setSubmittedWhatsAppUrl('');
+    setSubmittedRawMessage('');
+    setCopiedQuoteMessage(false);
   }
 
   async function handleQuoteSubmit(e) {
@@ -130,6 +224,7 @@ export default function Home() {
     const payload = {
       name: quoteName,
       phone: quotePhone,
+      email: quoteEmail || undefined,
       eventDate: quoteDate,
       eventType: quoteType,
       selectedBackdrop: quoteSelectedBackdrop || 'General Inquiry',
@@ -139,6 +234,7 @@ export default function Home() {
       venueSetting: quoteVenueSetting,
       stageDimensions: quoteStageDimensions,
       venueLandmark: quoteVenueLandmark,
+      budget: quoteBudget || undefined,
       notes: quoteNotes
     };
 
@@ -152,27 +248,33 @@ export default function Home() {
       console.error(e);
     }
 
+    const fullVenueAndReqs = [
+      quoteVenueName ? `Venue / Hall: ${quoteVenueName} (${quoteVenueCity || 'Coimbatore'})` : (quoteVenueCity ? `City: ${quoteVenueCity}` : ''),
+      quoteSelectedBackdrop && quoteSelectedBackdrop !== 'General Inquiry' ? `Preferred Backdrop: ${quoteSelectedBackdrop}` : '',
+      quoteVenueType ? `Venue Type: ${quoteVenueType}` : '',
+      quoteStageDimensions ? `Stage Dimensions: ${quoteStageDimensions}` : '',
+      quoteNotes ? quoteNotes : ''
+    ].filter(Boolean).join('\n');
+
+    const { url, rawMessage } = buildWhatsAppQuoteUrl({
+      fullName: quoteName,
+      whatsappNumber: quotePhone,
+      email: quoteEmail,
+      service: quoteType,
+      eventDate: quoteDate,
+      location: quoteVenueName ? `${quoteVenueName}, ${quoteVenueCity || 'Coimbatore'}` : (quoteVenueCity || 'Coimbatore'),
+      budget: quoteBudget,
+      requirements: fullVenueAndReqs || undefined,
+      recipientNumber: company.whatsapp || COMPANY_CONTACT.whatsappNumber
+    });
+
+    setSubmittedWhatsAppUrl(url);
+    setSubmittedRawMessage(rawMessage);
     setQuoteSubmitted(true);
 
-    const waText = `🌸 *New Event Quotation Inquiry - ${company.name}*\n\n` +
-      `👤 *Customer Information:*\n` +
-      `• *Name:* ${quoteName}\n` +
-      `• *Phone / WhatsApp:* ${quotePhone}\n\n` +
-      `📅 *Event Details:*\n` +
-      `• *Service / Category:* ${quoteType}\n` +
-      `• *Event Date:* ${quoteDate || 'To be decided'}\n` +
-      `• *Preferred Setup:* ${quoteSelectedBackdrop || 'General Consultation'}\n\n` +
-      `📍 *VENUE DETAILS:*\n` +
-      `• *Venue / Hall Name:* ${quoteVenueName || 'Not specified'}\n` +
-      `• *City / Area:* ${quoteVenueCity || 'Coimbatore'}\n` +
-      `• *Venue Type:* ${quoteVenueType}\n` +
-      `• *Setup Environment:* ${quoteVenueSetting}\n` +
-      (quoteStageDimensions ? `• *Stage Dimensions:* ${quoteStageDimensions}\n` : '') +
-      (quoteVenueLandmark ? `• *Landmark / Address:* ${quoteVenueLandmark}\n` : '') +
-      (quoteNotes ? `\n📝 *Special Requests / Notes:* ${quoteNotes}\n\n` : '\n') +
-      `Please check availability and send custom quotation!`;
-
-    window.open(generateWhatsAppUrl(waText), '_blank');
+    if (typeof window !== 'undefined') {
+      window.open(url, '_blank');
+    }
   }
 
   return (
@@ -187,7 +289,23 @@ export default function Home() {
         fontWeight: 500,
         letterSpacing: '0.04em'
       }}>
-        📍Located in Poomarket, Coimbatore | Serving Weddings &amp; Celebrations Across Tamil Nadu &amp; Kerala | Call: {company.phone}
+        📍Located in Poomarket, Coimbatore | Serving Weddings &amp; Celebrations Across Tamil Nadu &amp; Kerala |{' '}
+        <button
+          type="button"
+          onClick={handleOpenCallModal}
+          style={{
+            background: 'none',
+            border: 'none',
+            color: '#FFFFFF',
+            fontWeight: 600,
+            textDecoration: 'underline',
+            cursor: 'pointer',
+            padding: 0,
+            font: 'inherit'
+          }}
+        >
+          Call: {company.phone}
+        </button>
       </div>
 
       {/* 2. NAVIGATION BAR */}
@@ -215,18 +333,14 @@ export default function Home() {
           </nav>
 
           <div className="nav-actions">
-            <Link href="/admin" className="btn btn-ghost" style={{ padding: '8px 16px', fontSize: '0.82rem' }}>
-              ⚙️ Admin Panel
-            </Link>
-            <a
-              href={generateWhatsAppUrl()}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => navigateToQuote()}
               className="btn btn-whatsapp"
               style={{ padding: '9px 20px', fontSize: '0.85rem' }}
             >
               💬 WhatsApp
-            </a>
+            </button>
           </div>
         </div>
       </header>
@@ -247,16 +361,15 @@ export default function Home() {
 
           <div className="hero-cta-group" style={{ justifyContent: 'center', marginBottom: '10px' }}>
             <a href="#backdrops" className="btn btn-primary">
-              Explore 9 Collections ↓
+              Explore The Collections ↓
             </a>
-            <a
-              href={generateWhatsAppUrl("Hi! I would like to book a consultation for an upcoming event stage setup.")}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
+              onClick={() => navigateToQuote('', '', 'Hi! I would like to book a consultation for an upcoming event stage setup.')}
               className="btn btn-gold"
             >
               Chat on WhatsApp
-            </a>
+            </button>
           </div>
         </div>
 
@@ -277,7 +390,7 @@ export default function Home() {
               <p>Years in Coimbatore</p>
             </div>
             <div className="stat-item">
-              <h3>{carouselCards.length >= 511 ? `${carouselCards.length}+` : '520+'}</h3>
+              <h3>{carouselCards.length > 0 ? `${carouselCards.length}` : (company.completedEvents || '500+')}</h3>
               <p>Stage Setups</p>
             </div>
             <div className="stat-item">
@@ -288,7 +401,375 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 4. BACKDROP CATALOGUE SECTION */}
+      {/* 4. INSTAGRAM REELS & LIVE EVENT SHOWCASE */}
+      <section id="instagram" style={{
+        background: '#FFFFFF',
+        padding: '85px 0 75px',
+        borderTop: '1px solid #ECE7E1',
+        borderBottom: '1px solid #ECE7E1',
+        position: 'relative'
+      }}>
+        <div className="container">
+          {/* Header */}
+          <div style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 40px' }}>
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '7px 18px',
+              borderRadius: '999px',
+              background: 'linear-gradient(135deg, #F58529, #DD2A7B, #8134AF)',
+              color: '#FFFFFF',
+              fontSize: '0.78rem',
+              fontWeight: 700,
+              letterSpacing: '0.06em',
+              textTransform: 'uppercase',
+              marginBottom: '16px',
+              boxShadow: '0 4px 16px rgba(221, 42, 123, 0.25)'
+            }}>
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+                <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+                <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+              </svg>
+              Watch On Instagram
+            </div>
+
+            <h2 style={{ fontSize: 'clamp(2.2rem, 4vw, 2.8rem)', color: 'var(--color-sage)', margin: '0 0 16px', lineHeight: 1.2 }}>
+              Real Celebrations in Motion
+            </h2>
+            <p style={{ color: 'var(--text-muted)', fontSize: '1.02rem', lineHeight: '1.6', margin: '0 auto 28px' }}>
+              Step behind the curtain. Explore our real event transformations, Muhurtham timelapses and fresh floral setups filmed live on-site across Coimbatore.
+            </p>
+
+            {/* Instagram Profile Social Badge */}
+            <div style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: '20px',
+              background: '#FAF8F5',
+              border: '1.5px solid #EAE3D9',
+              borderRadius: '16px',
+              padding: '12px 20px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+              flexWrap: 'wrap'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '50%',
+                  padding: '2.5px',
+                  background: 'linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0
+                }}>
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    borderRadius: '50%',
+                    background: '#FFFFFF',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    overflow: 'hidden'
+                  }}>
+                    <img src="/logo.png" alt="FlowerSpot" style={{ width: '85%', height: '85%', objectFit: 'contain' }} />
+                  </div>
+                </div>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ fontWeight: 700, fontSize: '0.98rem', color: '#1D2620' }}>
+                      @{instagramHandle}
+                    </span>
+                    <span style={{ color: '#0095F6', fontSize: '0.9rem' }} title="Verified Profile">●</span>
+                  </div>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                    FlowerSpot Events • 500+ Setup Videos
+                  </span>
+                </div>
+              </div>
+
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  background: 'linear-gradient(135deg, #F58529, #DD2A7B, #8134AF)',
+                  color: '#FFFFFF',
+                  padding: '9px 18px',
+                  borderRadius: '10px',
+                  fontSize: '0.86rem',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: '0 4px 14px rgba(221, 42, 123, 0.28)',
+                  transition: 'transform 0.2s ease'
+                }}
+              >
+                <span>Follow on Instagram</span>
+                <span>↗</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Reels Preview Grid (5 Distinct Verticals) */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(210px, 1fr))',
+            gap: '18px',
+            marginBottom: '36px'
+          }}>
+            {instagramReels.map((reel) => (
+              <a
+                key={reel.id}
+                href={instagramUrl}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  display: 'block',
+                  position: 'relative',
+                  borderRadius: '18px',
+                  overflow: 'hidden',
+                  aspectRatio: '9/14',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.1)',
+                  textDecoration: 'none',
+                  color: '#FFFFFF',
+                  background: '#1A1F1B',
+                  border: '1px solid rgba(0,0,0,0.06)',
+                  cursor: 'pointer'
+                }}
+                className="instagram-reel-card"
+              >
+                {/* Image Background or Clean Video Frame */}
+                {reel.image ? (
+                  <img
+                    src={reel.image}
+                    alt={reel.title}
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'cover',
+                      display: 'block',
+                      transition: 'transform 0.4s ease'
+                    }}
+                  />
+                ) : (
+                  <div style={{
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(135deg, #1C271F 0%, #2E3E32 50%, #151F18 100%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexDirection: 'column',
+                    padding: '24px',
+                    textAlign: 'center'
+                  }}>
+                    <div style={{
+                      width: '54px',
+                      height: '54px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.12)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.6rem',
+                      marginBottom: '10px'
+                    }}>
+                      📹
+                    </div>
+                    <span style={{ fontSize: '0.85rem', color: '#E8E3DC', fontWeight: 600 }}>Watch Live Video</span>
+                  </div>
+                )}
+
+                {/* Dark Cinematic Gradient Overlay */}
+                <div style={{
+                  position: 'absolute',
+                  inset: 0,
+                  background: 'linear-gradient(180deg, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.05) 40%, rgba(0,0,0,0.85) 100%)',
+                  pointerEvents: 'none'
+                }} />
+
+                {/* Top Badge: Reels Info */}
+                <div style={{
+                  position: 'absolute',
+                  top: '12px',
+                  left: '12px',
+                  right: '12px',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  pointerEvents: 'none'
+                }}>
+                  <span style={{
+                    background: 'rgba(0, 0, 0, 0.55)',
+                    backdropFilter: 'blur(8px)',
+                    color: '#FFFFFF',
+                    fontSize: '0.72rem',
+                    fontWeight: 600,
+                    padding: '4px 9px',
+                    borderRadius: '999px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}>
+                    <span>📹</span> {reel.views}
+                  </span>
+                  <div style={{
+                    width: '26px',
+                    height: '26px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.25)',
+                    backdropFilter: 'blur(6px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#FFFFFF',
+                    fontSize: '0.75rem'
+                  }}>
+                    📷
+                  </div>
+                </div>
+
+                {/* Center Play Button Overlay */}
+                <div style={{
+                  position: 'absolute',
+                  top: '50%',
+                  left: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.88)',
+                  backdropFilter: 'blur(8px)',
+                  color: '#1D2620',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1.2rem',
+                  paddingLeft: '3px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.3)',
+                  transition: 'all 0.25s ease'
+                }} className="reel-play-btn">
+                  ▶
+                </div>
+
+                {/* Bottom Details */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: '14px',
+                  left: '14px',
+                  right: '14px',
+                  pointerEvents: 'none'
+                }}>
+                  <span style={{
+                    display: 'inline-block',
+                    fontSize: '0.7rem',
+                    color: '#FFDE8A',
+                    fontWeight: 700,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                    marginBottom: '4px'
+                  }}>
+                    {reel.tag}
+                  </span>
+                  <h4 style={{
+                    fontSize: '0.96rem',
+                    fontWeight: 600,
+                    lineHeight: '1.3',
+                    margin: '0 0 4px',
+                    color: '#FFFFFF'
+                  }}>
+                    {reel.title}
+                  </h4>
+                  <p style={{
+                    fontSize: '0.75rem',
+                    color: 'rgba(255, 255, 255, 0.8)',
+                    margin: '0 0 10px'
+                  }}>
+                    📍 {reel.location}
+                  </p>
+                  <span style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '0.75rem',
+                    fontWeight: 600,
+                    color: '#FFFFFF',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    backdropFilter: 'blur(6px)',
+                    padding: '4px 10px',
+                    borderRadius: '6px'
+                  }}>
+                    Watch Reel on Instagram ↗
+                  </span>
+                </div>
+              </a>
+            ))}
+          </div>
+
+          {/* Bottom Social Proof Bar */}
+          <div style={{
+            background: '#FAF8F5',
+            borderRadius: '16px',
+            border: '1px solid #EAE3D9',
+            padding: '24px 30px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            flexWrap: 'wrap',
+            gap: '18px'
+          }}>
+            <div>
+              <h4 style={{ fontSize: '1.15rem', color: 'var(--color-sage)', margin: '0 0 4px', fontWeight: 700 }}>
+                Looking for Video Walkthroughs of Your Venue?
+              </h4>
+              <p style={{ fontSize: '0.88rem', color: 'var(--text-muted)', margin: 0 }}>
+                We frequently film at all over Tamil Nadu. Check our reels or DM us.
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="btn"
+                style={{
+                  background: 'linear-gradient(135deg, #F58529, #DD2A7B, #8134AF)',
+                  color: '#FFFFFF',
+                  padding: '10px 22px',
+                  borderRadius: '10px',
+                  fontSize: '0.88rem',
+                  fontWeight: 600,
+                  textDecoration: 'none',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  boxShadow: '0 4px 14px rgba(221, 42, 123, 0.25)'
+                }}
+              >
+                <span>📸</span> View 100+ Reels on Instagram
+              </a>
+              <a
+                href="#backdrops"
+                className="btn btn-primary"
+                style={{ padding: '10px 22px', fontSize: '0.88rem' }}
+              >
+                Explore Catalogue Below ↓
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 5. BACKDROP CATALOGUE SECTION */}
       <section id="backdrops" style={{ padding: '90px 0', background: 'var(--color-bg)' }}>
         <div className="container">
           <div className="section-header">
@@ -408,15 +889,14 @@ export default function Home() {
                         >
                           View Collection →
                         </button>
-                        <a
-                          href={generateWhatsAppUrl(`Hello! I would like to inquire about ${cat.name} for my event.`)}
-                          target="_blank"
-                          rel="noreferrer"
+                        <button
+                          type="button"
+                          onClick={() => navigateToQuote(cat.name, '', `Hello! I would like to inquire about ${cat.name} setup for my upcoming event.`)}
                           className="btn btn-whatsapp"
                           style={{ padding: '10px 14px', fontSize: '0.85rem' }}
                         >
                           💬 Quote
-                        </a>
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -462,13 +942,6 @@ export default function Home() {
                   >
                     ← Back to All 9 Categories
                   </button>
-                  <Link
-                    href={`/admin`}
-                    className="btn btn-ghost"
-                    style={{ padding: '8px 18px', fontSize: '0.85rem' }}
-                  >
-                    ⚙️ Manage in Admin
-                  </Link>
                 </div>
               </div>
 
@@ -512,14 +985,13 @@ export default function Home() {
                           >
                             Inspect Specs
                           </button>
-                          <a
-                            href={generateWhatsAppUrl(`Hello! I'm interested in booking the "${item.title}" (${item.category}). Please let me know quote and availability.`)}
-                            target="_blank"
-                            rel="noreferrer"
+                          <button
+                            type="button"
+                            onClick={() => navigateToQuote(item.category, item.title, `Interested in booking the "${item.title}" (${item.category}). Please provide quotation and availability.`)}
                             className="btn btn-whatsapp"
                           >
                             WhatsApp Quote
-                          </a>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -559,22 +1031,18 @@ export default function Home() {
                   </h3>
 
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', maxWidth: '520px', margin: '0 auto 24px', lineHeight: '1.6' }}>
-                    This category card is ready for company photos. The administrator can upload high-resolution setup photos, dimensions, and descriptions directly from the Admin Panel.
+                    Custom stage designs, live floral artistry, and tailored backdrops are available for {selectedCategory}. Inquire with our event team for design portfolios, venue compatibility, and quotation.
                   </p>
 
                   <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                    <Link href="/admin" className="btn btn-primary" style={{ padding: '10px 22px' }}>
-                      📸 Upload Photos in Admin Panel
-                    </Link>
-                    <a
-                      href={generateWhatsAppUrl(`Hi, I am looking for custom designs and quotations for ${selectedCategory}.`)}
-                      target="_blank"
-                      rel="noreferrer"
+                    <button
+                      type="button"
+                      onClick={() => navigateToQuote(selectedCategory, '', `Inquiring for custom stage designs and quotations for ${selectedCategory}.`)}
                       className="btn btn-whatsapp"
                       style={{ padding: '10px 22px' }}
                     >
                       💬 Inquire on WhatsApp
-                    </a>
+                    </button>
                     <button
                       onClick={() => setSelectedCategory('All')}
                       className="btn btn-outline"
@@ -638,21 +1106,32 @@ export default function Home() {
               </div>
 
               <div style={{ marginTop: 'auto', display: 'flex', gap: '12px' }}>
-                <a
-                  href={generateWhatsAppUrl(`Hi, I am looking at "${activeModalBackdrop.title}" on your website and want to check pricing and availability.`)}
-                  target="_blank"
-                  rel="noreferrer"
+                <button
+                  type="button"
+                  onClick={() => {
+                    const backdrop = activeModalBackdrop;
+                    setActiveModalBackdrop(null);
+                    navigateToQuote(
+                      backdrop.category,
+                      backdrop.title,
+                      `Interested in booking "${backdrop.title}" (${backdrop.category}${backdrop.dimensions ? `, Stage: ${backdrop.dimensions}` : ''}). Please check pricing and availability.`
+                    );
+                  }}
                   className="btn btn-whatsapp"
                   style={{ flex: 1 }}
                 >
                   Book Setup on WhatsApp
-                </a>
-                <a
-                  href={`tel:${company.phone.replace(/[^0-9]/g, '')}`}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveModalBackdrop(null);
+                    handleOpenCallModal();
+                  }}
                   className="btn btn-outline"
                 >
                   Call Store
-                </a>
+                </button>
               </div>
             </div>
           </div>
@@ -676,7 +1155,8 @@ export default function Home() {
           <WorksWheel
             items={servicesWheelItems}
             label="Our Services"
-            action="Enquire on WhatsApp"
+            action="Get Instant Quote"
+            onItemAction={(item) => navigateToQuote(item.title, '', `Inquiring about ${item.title} service: ${item.description || ''}`)}
           />
         </div>
       </section>
@@ -701,176 +1181,363 @@ export default function Home() {
 
             {quoteSubmitted ? (
               <div style={{
-                background: '#E8F5E9',
-                border: '1px solid #A5D6A7',
-                borderRadius: '16px',
-                padding: '30px',
-                textAlign: 'center'
+                background: '#F0F9F1',
+                border: '1.5px solid #A5D6A7',
+                borderRadius: '20px',
+                padding: '40px 30px',
+                textAlign: 'center',
+                boxShadow: '0 8px 30px rgba(46, 125, 50, 0.08)'
               }}>
-                <div style={{ fontSize: '2.5rem', marginBottom: '10px' }}>✓</div>
-                <h3 style={{ color: '#2E7D32', marginBottom: '8px' }}>Thank You! Quotation Request Received</h3>
-                <p style={{ color: '#1B5E20', fontSize: '0.95rem', marginBottom: '16px' }}>
-                  We opened WhatsApp for you with the event and venue details. Our team in Poomarket will respond shortly!
+                <div style={{
+                  width: '64px',
+                  height: '64px',
+                  borderRadius: '50%',
+                  background: '#2E7D32',
+                  color: '#FFFFFF',
+                  fontSize: '2rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  margin: '0 auto 18px',
+                  boxShadow: '0 4px 14px rgba(46, 125, 50, 0.3)'
+                }}>
+                  ✓
+                </div>
+                <h3 style={{ color: '#1B5E20', fontSize: '1.8rem', fontWeight: 700, marginBottom: '8px' }}>
+                  Quotation Request Sent!
+                </h3>
+                <p style={{ color: '#2E7D32', fontSize: '1.02rem', maxWidth: '620px', margin: '0 auto 20px', lineHeight: '1.6' }}>
+                  We opened WhatsApp with your custom event and venue quotation details. Our Coimbatore team will review availability and reply promptly!
                 </p>
-                <button
-                  onClick={handleResetQuote}
-                  className="btn btn-primary"
-                  style={{ fontSize: '0.85rem' }}
-                >
-                  Submit Another Inquiry
-                </button>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '22px' }}>
+                  {submittedWhatsAppUrl && (
+                    <a
+                      href={submittedWhatsAppUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-whatsapp"
+                      style={{ padding: '12px 24px', fontSize: '1rem', textDecoration: 'none' }}
+                    >
+                      💬 Open WhatsApp Again
+                    </a>
+                  )}
+                  {submittedRawMessage && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        navigator.clipboard?.writeText(submittedRawMessage);
+                        setCopiedQuoteMessage(true);
+                        setTimeout(() => setCopiedQuoteMessage(false), 3000);
+                      }}
+                      className="btn btn-outline"
+                      style={{ padding: '12px 20px', fontSize: '0.95rem' }}
+                    >
+                      {copiedQuoteMessage ? '✓ Copied to Clipboard!' : '📋 Copy Quote Message'}
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleResetQuote}
+                    className="btn btn-primary"
+                    style={{ padding: '12px 22px', fontSize: '0.95rem' }}
+                  >
+                    Submit Another Inquiry
+                  </button>
+                </div>
+
+                {submittedRawMessage && (
+                  <details style={{
+                    marginTop: '20px',
+                    textAlign: 'left',
+                    background: '#FFFFFF',
+                    borderRadius: '12px',
+                    padding: '14px 18px',
+                    border: '1px solid #C8E6C9'
+                  }}>
+                    <summary style={{ cursor: 'pointer', fontSize: '0.85rem', color: '#2E7D32', fontWeight: 600 }}>
+                      View Sent WhatsApp Message Details
+                    </summary>
+                    <pre style={{
+                      marginTop: '12px',
+                      whiteSpace: 'pre-wrap',
+                      fontFamily: 'inherit',
+                      fontSize: '0.84rem',
+                      lineHeight: '1.5',
+                      color: '#263238',
+                      background: '#F9FBE7',
+                      padding: '12px',
+                      borderRadius: '8px'
+                    }}>
+                      {submittedRawMessage}
+                    </pre>
+                  </details>
+                )}
               </div>
             ) : (
-              <form onSubmit={handleQuoteSubmit}>
-                {/* 1. Customer Contact Details */}
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Your Name *</label>
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder="e.g. Ramesh Kumar"
-                      value={quoteName}
-                      onChange={(e) => setQuoteName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Phone / WhatsApp Number *</label>
-                    <input
-                      type="tel"
-                      className="form-control"
-                      placeholder="e.g. 80984 15066"
-                      value={quotePhone}
-                      onChange={(e) => setQuotePhone(e.target.value)}
-                      required
-                    />
-                  </div>
-                </div>
-
-                {/* 2. Event Essentials */}
-                <div className="form-row">
-                  <div className="form-group">
-                    <label>Tentative Event Date *</label>
-                    <input
-                      type="date"
-                      className="form-control"
-                      value={quoteDate}
-                      onChange={(e) => setQuoteDate(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Type of Event / Service *</label>
-                    <select
-                      className="form-control"
-                      value={quoteType}
-                      onChange={(e) => setQuoteType(e.target.value)}
+              <div>
+                {/* Visual badge when a specific backdrop was chosen */}
+                {quoteSelectedBackdrop && (
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    background: '#FAF3E8',
+                    border: '1.5px solid #E5C38B',
+                    borderRadius: '14px',
+                    padding: '12px 18px',
+                    marginBottom: '24px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <span style={{ fontSize: '1.3rem' }}>✨</span>
+                      <div>
+                        <span style={{ fontSize: '0.75rem', color: '#8C6826', textTransform: 'uppercase', fontWeight: 700, letterSpacing: '0.05em' }}>
+                          Selected Stage Setup
+                        </span>
+                        <div style={{ fontSize: '1.05rem', fontWeight: 600, color: 'var(--color-sage)' }}>
+                          {quoteSelectedBackdrop}
+                        </div>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setQuoteSelectedBackdrop('')}
+                      style={{
+                        background: '#FFFFFF',
+                        border: '1px solid #D1AC68',
+                        borderRadius: '8px',
+                        color: '#8C6826',
+                        padding: '5px 12px',
+                        fontSize: '0.8rem',
+                        cursor: 'pointer',
+                        fontWeight: 600
+                      }}
                     >
-                      {CATEGORIES.map((cat) => (
-                        <option key={cat.id} value={cat.name}>
-                          {cat.icon} {cat.name}
-                        </option>
-                      ))}
-                    </select>
+                      ✕ Clear Selection
+                    </button>
                   </div>
-                </div>
+                )}
 
-                {/* 3. DEDICATED VENUE SECTION */}
-                <div style={{
-                  background: '#FAF8F5',
-                  border: '1.5px solid var(--border-subtle)',
-                  borderRadius: '16px',
-                  padding: '24px 22px',
-                  margin: '24px 0 22px',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
-                    <div style={{
-                      width: '38px',
-                      height: '38px',
-                      borderRadius: '50%',
-                      background: 'var(--color-sage)',
-                      color: '#FFFFFF',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '1.2rem',
-                      flexShrink: 0
-                    }}>
-                      📍
-                    </div>
-                    <div>
-                      <h3 style={{ fontSize: '1.15rem', margin: 0, color: 'var(--color-sage)', fontWeight: '700' }}>
-                        Venue &amp; Location Details
-                      </h3>
-                      <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
-                        Provide your hall name or event place so we can plan the right stage dimensions and transport logistics.
-                      </p>
-                    </div>
-                  </div>
-
+                <form onSubmit={handleQuoteSubmit}>
+                  {/* 1. Customer Contact Details */}
                   <div className="form-row">
-                    <div className="form-group" style={{ marginBottom: '16px' }}>
-                      <label>Venue / Hall / Mahal Name *</label>
+                    <div className="form-group">
+                      <label htmlFor="quote-name-input">Your Name *</label>
                       <input
+                        id="quote-name-input"
+                        name="fullName"
                         type="text"
+                        autoComplete="name"
                         className="form-control"
-                        placeholder="e.g. Codissia Hall E, Sri Krishna Mahal, Residency Hotel, Home"
-                        value={quoteVenueName}
-                        onChange={(e) => setQuoteVenueName(e.target.value)}
+                        placeholder="e.g. Ramesh Kumar"
+                        value={quoteName}
+                        onChange={(e) => setQuoteName(e.target.value)}
                         required
                       />
                     </div>
-                    <div className="form-group" style={{ marginBottom: '16px' }}>
-                      <label>City / Town / Area *</label>
+                    <div className="form-group">
+                      <label htmlFor="quote-phone-input">Phone / WhatsApp Number *</label>
                       <input
-                        type="text"
+                        id="quote-phone-input"
+                        name="telephone"
+                        type="tel"
+                        autoComplete="tel"
                         className="form-control"
-                        placeholder="e.g. Coimbatore, Peelamedu (or Tiruppur, Erode, Pollachi)"
-                        value={quoteVenueCity}
-                        onChange={(e) => setQuoteVenueCity(e.target.value)}
+                        placeholder="e.g. 80984 15066"
+                        value={quotePhone}
+                        onChange={(e) => setQuotePhone(e.target.value)}
                         required
                       />
                     </div>
                   </div>
 
+                  {/* 2. Email & Budget Range (Optional) */}
                   <div className="form-row">
-                    <div className="form-group" style={{ marginBottom: '16px' }}>
-                      <label>Venue Type</label>
+                    <div className="form-group">
+                      <label htmlFor="quote-email-input">Email Address (Optional)</label>
+                      <input
+                        id="quote-email-input"
+                        name="emailAddress"
+                        type="email"
+                        autoComplete="email"
+                        className="form-control"
+                        placeholder="e.g. ramesh@example.com"
+                        value={quoteEmail}
+                        onChange={(e) => setQuoteEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="quote-budget-select">Estimated Budget (Optional)</label>
                       <select
+                        id="quote-budget-select"
+                        name="budgetRange"
                         className="form-control"
-                        value={quoteVenueType}
-                        onChange={(e) => setQuoteVenueType(e.target.value)}
+                        value={quoteBudget}
+                        onChange={(e) => setQuoteBudget(e.target.value)}
                       >
-                        <option value="Kalyana Mandapam / Marriage Mahal">Kalyana Mandapam / Marriage Mahal</option>
-                        <option value="Hotel Banquet Hall / Resort">Hotel Banquet Hall / Resort</option>
-                        <option value="Outdoor Lawn / Open Grounds">Outdoor Lawn / Open Grounds</option>
-                        <option value="Residence / Home Setup">Residence / Home Setup</option>
-                        <option value="Temple / Religious Hall">Temple / Religious Hall</option>
-                        <option value="School / College Auditorium">School / College Auditorium</option>
-                        <option value="Convention / Exhibition Centre">Convention / Exhibition Centre</option>
-                        <option value="Community Hall / Other">Community Hall / Other</option>
+                        <option value="">Select a Budget Range (Optional)</option>
+                        <option value="Under ₹30,000">Under ₹30,000</option>
+                        <option value="₹30,000 - ₹50,000">₹30,000 - ₹50,000</option>
+                        <option value="₹50,000 - ₹1,00,000">₹50,000 - ₹1,00,000</option>
+                        <option value="₹1,00,000 - ₹2,50,000">₹1,00,000 - ₹2,50,000</option>
+                        <option value="₹2,50,000 - ₹5,00,000">₹2,50,000 - ₹5,00,000</option>
+                        <option value="₹5,00,000+">₹5,00,000+</option>
+                        <option value="Flexible / Open to Recommendations">Flexible / Open to Recommendations</option>
                       </select>
                     </div>
                   </div>
-                </div>
 
-                {/* 4. Special Requests / Notes */}
-                <div className="form-group">
-                  <label>Additional Notes / Theme / Deliverables (Optional)</label>
-                  <textarea
-                    className="form-control"
-                    rows={3}
-                    placeholder="e.g. Fresh jasmine fragrance, pastel pink color palette, LED wall video loop, sound setup..."
-                    value={quoteNotes}
-                    onChange={(e) => setQuoteNotes(e.target.value)}
-                  />
-                </div>
+                  {/* 3. Event Essentials */}
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="quote-date-input">Tentative Event Date</label>
+                      <input
+                        id="quote-date-input"
+                        name="eventDate"
+                        type="date"
+                        className="form-control"
+                        value={quoteDate}
+                        onChange={(e) => setQuoteDate(e.target.value)}
+                        min={minEventDate || undefined}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label htmlFor="quote-type-select">Type of Event / Service *</label>
+                      <select
+                        id="quote-type-select"
+                        name="serviceType"
+                        className="form-control"
+                        value={quoteType}
+                        onChange={(e) => setQuoteType(e.target.value)}
+                      >
+                        {CATEGORIES.map((cat) => (
+                          <option key={cat.id} value={cat.name}>
+                            {cat.icon} {cat.name}
+                          </option>
+                        ))}
+                        <option value="General Stage Decoration">✨ General Stage Decoration &amp; Mandap</option>
+                        <option value="Complete Wedding Package">👑 Complete Wedding Package (Stage + AV + Flowers)</option>
+                      </select>
+                    </div>
+                  </div>
 
-                <button type="submit" className="btn btn-gold" style={{ width: '100%', padding: '16px', fontSize: '1.05rem' }}>
-                  🚀 Get Instant Quote via WhatsApp
-                </button>
-              </form>
+                  {/* 3. DEDICATED VENUE SECTION */}
+                  <div style={{
+                    background: '#FAF8F5',
+                    border: '1.5px solid var(--border-subtle)',
+                    borderRadius: '16px',
+                    padding: '24px 22px',
+                    margin: '24px 0 22px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '18px' }}>
+                      <div style={{
+                        width: '38px',
+                        height: '38px',
+                        borderRadius: '50%',
+                        background: 'var(--color-sage)',
+                        color: '#FFFFFF',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '1.2rem',
+                        flexShrink: 0
+                      }}>
+                        📍
+                      </div>
+                      <div>
+                        <h3 style={{ fontSize: '1.15rem', margin: 0, color: 'var(--color-sage)', fontWeight: '700' }}>
+                          Venue &amp; Location Details
+                        </h3>
+                        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
+                          Provide your hall name or event place so we can plan the right stage dimensions and transport logistics.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group" style={{ marginBottom: '16px' }}>
+                        <label htmlFor="quote-venue-name-input">Venue / Hall / Mahal Name *</label>
+                        <input
+                          id="quote-venue-name-input"
+                          name="venueName"
+                          type="text"
+                          className="form-control"
+                          placeholder="e.g. Codissia Hall E, Sri Krishna Mahal, Residency Hotel, Home"
+                          value={quoteVenueName}
+                          onChange={(e) => setQuoteVenueName(e.target.value)}
+                          required
+                        />
+                      </div>
+                      <div className="form-group" style={{ marginBottom: '16px' }}>
+                        <label htmlFor="quote-venue-city-input">City / Town / Area *</label>
+                        <input
+                          id="quote-venue-city-input"
+                          name="venueCity"
+                          type="text"
+                          autoComplete="address-level2"
+                          className="form-control"
+                          placeholder="e.g. Coimbatore, Peelamedu (or Tiruppur, Erode, Pollachi)"
+                          value={quoteVenueCity}
+                          onChange={(e) => setQuoteVenueCity(e.target.value)}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <div className="form-row">
+                      <div className="form-group" style={{ marginBottom: '16px' }}>
+                        <label htmlFor="quote-venue-type-select">Venue Type</label>
+                        <select
+                          id="quote-venue-type-select"
+                          name="venueType"
+                          className="form-control"
+                          value={quoteVenueType}
+                          onChange={(e) => setQuoteVenueType(e.target.value)}
+                        >
+                          <option value="Kalyana Mandapam / Marriage Mahal">Kalyana Mandapam / Marriage Mahal</option>
+                          <option value="Hotel Banquet Hall / Resort">Hotel Banquet Hall / Resort</option>
+                          <option value="Outdoor Lawn / Open Grounds">Outdoor Lawn / Open Grounds</option>
+                          <option value="Residence / Home Setup">Residence / Home Setup</option>
+                          <option value="Temple / Religious Hall">Temple / Religious Hall</option>
+                          <option value="School / College Auditorium">School / College Auditorium</option>
+                          <option value="Convention / Exhibition Centre">Convention / Exhibition Centre</option>
+                          <option value="Community Hall / Other">Community Hall / Other</option>
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* 4. Special Requests / Notes */}
+                  <div className="form-group">
+                    <label htmlFor="quote-notes-textarea">Additional Notes / Theme / Deliverables (Optional)</label>
+                    <textarea
+                      id="quote-notes-textarea"
+                      name="specialNotes"
+                      className="form-control"
+                      rows={3}
+                      placeholder="e.g. Fresh jasmine fragrance, pastel pink color palette, LED wall video loop, sound setup..."
+                      value={quoteNotes}
+                      onChange={(e) => setQuoteNotes(e.target.value)}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn btn-gold"
+                    style={{
+                      width: '100%',
+                      padding: '16px',
+                      fontSize: '1.05rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    Submit
+                  </button>
+                </form>
+              </div>
             )}
           </div>
         </div>
@@ -895,9 +1562,6 @@ export default function Home() {
               <a href={company.googleMapsUrl} target="_blank" rel="noreferrer" className="btn btn-primary">
                 📍 Open Google Maps Directions
               </a>
-              <a href={`tel:${company.phone.replace(/[^0-9]/g, '')}`} className="btn btn-outline">
-                📞 Call {company.phone}
-              </a>
             </div>
           </div>
 
@@ -912,11 +1576,16 @@ export default function Home() {
               </div>
             </div>
 
-            <div className="info-row">
+            <div
+              className="info-row"
+              onClick={handleOpenCallModal}
+              style={{ cursor: 'pointer', transition: 'all 0.2s ease', padding: '6px', borderRadius: '10px' }}
+              title="Click to call our planners"
+            >
               <div className="info-icon">📞</div>
               <div className="info-content">
                 <h4>Phone &amp; Bookings</h4>
-                <p>{company.phone}</p>
+                <p style={{ color: 'var(--color-sage)', fontWeight: 600 }}>{company.phone} (Click to Call)</p>
               </div>
             </div>
 
@@ -985,10 +1654,10 @@ export default function Home() {
           <div>
             <h4 style={{ fontSize: '1.1rem', marginBottom: '12px' }}>Quick Navigation</h4>
             <ul style={{ listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px', fontSize: '0.88rem' }}>
+              <li><a href="#instagram">Instagram Reels &amp; Videos</a></li>
               <li><a href="#backdrops">Backdrop Catalogue</a></li>
               <li><a href="#services">Our Services</a></li>
               <li><a href="#quote">Get Quotation</a></li>
-              <li><Link href="/admin">⚙️ Admin Dashboard</Link></li>
             </ul>
           </div>
         </div>
@@ -998,27 +1667,61 @@ export default function Home() {
         </div>
       </footer>
 
-      {/* 10. FLOATING DESKTOP WHATSAPP BUTTON */}
-      <div className="floating-actions">
-        <a
-          href={generateWhatsAppUrl()}
-          target="_blank"
-          rel="noreferrer"
-          className="floating-whatsapp-btn"
-        >
-          💬 WhatsApp Us
-        </a>
-      </div>
+      {/* 10. LIVE FLOATING INSTAGRAM APP */}
+      <a
+        href={instagramUrl}
+        target="_blank"
+        rel="noreferrer"
+        className="floating-instagram-app"
+        aria-label="Watch live videos and reels on Instagram"
+      >
+        <div className="floating-instagram-btn">
+          {/* Live Reel Flashing Ping Indicator */}
+          <div className="live-reel-ping" title="Live Event Reels">
+            <span className="ping-circle" />
+            <span className="ping-dot" />
+          </div>
+
+          {/* Instagram Camera SVG Icon */}
+          <svg
+            width="35"
+            height="35"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2.2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{ display: 'block', flexShrink: 0 }}
+          >
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect>
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path>
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line>
+          </svg>
+        </div>
+      </a>
 
       {/* 11. MOBILE BOTTOM STICKY BAR */}
-      <div className="mobile-bottom-bar">
-        <a href={`tel:${company.phone.replace(/[^0-9]/g, '')}`} className="btn btn-outline">
+      <div className="mobile-bottom-bar" style={{ display: 'flex', gap: '12px' }}>
+        <button
+          type="button"
+          onClick={handleOpenCallModal}
+          className="btn btn-outline"
+          style={{ flex: 1, padding: '12px 14px', fontSize: '0.9rem' }}
+        >
           📞 Call Now
-        </a>
-        <a href={generateWhatsAppUrl()} target="_blank" rel="noreferrer" className="btn btn-whatsapp">
-          💬 WhatsApp Quote
-        </a>
+        </button>
       </div>
+
+      {/* 12. CONTACT CALL MODAL */}
+      <ContactCallModal
+        isOpen={isCallModalOpen}
+        onClose={() => setIsCallModalOpen(false)}
+        phoneDisplay={company.phone}
+        companyName={company.name}
+        workingHours={company.workingHours}
+        address={company.address}
+      />
     </>
   );
 }
