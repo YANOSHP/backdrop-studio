@@ -27,10 +27,11 @@ const FAN_POSITIONS = [
 ];
 
 function getResponsiveMultiplier(width: number) {
-  if (width < 480) return 0.28;
-  if (width < 640) return 0.38;
-  if (width < 768) return 0.5;
-  if (width < 1024) return 0.75;
+  if (width < 380) return 0.16;
+  if (width < 480) return 0.20;
+  if (width < 640) return 0.28;
+  if (width < 768) return 0.38;
+  if (width < 1024) return 0.65;
   return 1.0;
 }
 
@@ -41,10 +42,10 @@ function getResponsiveMultiplier(width: number) {
 function getHeightMultiplier(width: number) {
   // Ideal layout heights (in px at 16px root) matching the CSS breakpoints
   let idealPx: number;
-  if (width < 480) idealPx = 22 * 16;       // 352px
-  else if (width < 640) idealPx = 26 * 16;  // 416px
-  else if (width < 768) idealPx = 28 * 16;  // 448px
-  else if (width < 1024) idealPx = 34 * 16; // 544px
+  if (width < 480) idealPx = 16 * 16;       // 256px
+  else if (width < 640) idealPx = 20 * 16;  // 320px
+  else if (width < 768) idealPx = 24 * 16;  // 384px
+  else if (width < 1024) idealPx = 30 * 16; // 480px
   else idealPx = 38 * 16;                    // 608px
 
   if (typeof window === "undefined") return 1;
@@ -80,6 +81,30 @@ export function SocialCards({ cards }: SocialCardsProps) {
   const totalCards = cards.length;
   const needsPagination = totalCards > MAX_VISIBLE;
   const [centerIndex, setCenterIndex] = useState(needsPagination ? HALF : totalCards >> 1);
+
+  // Mobile Touch Swipe detection
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    const diffX = touchStartX.current - e.changedTouches[0].clientX;
+    const diffY = touchStartY.current - e.changedTouches[0].clientY;
+    if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY)) {
+      if (diffX > 0) {
+        cycle("right");
+      } else {
+        cycle("left");
+      }
+    }
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
 
   const getVisibleMap = useCallback((center: number) => {
     const map = new Map<number, number>();
@@ -204,7 +229,6 @@ export function SocialCards({ cards }: SocialCardsProps) {
               targetRot -= 3 / (distance + 1);
             } else {
               targetX += pushStrength * mult;
-              targetRot += 3 / (distance + 1);
             }
 
             if (slot === visibleEntries.length - 1 && hoveredSlot < centerSlot) targetY -= 1 * hM;
@@ -281,7 +305,12 @@ export function SocialCards({ cards }: SocialCardsProps) {
   return (
     <section className="flex flex-col items-center w-full py-4 lg:py-8 px-4 md:px-8 relative z-20">
       <div className="flex items-center justify-center w-full max-w-[90rem]">
-        <div ref={containerRef} className="fan-layout flex relative justify-center items-center w-full max-w-[80rem]">
+        <div
+          ref={containerRef}
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+          className="fan-layout flex relative justify-center items-center w-full max-w-[80rem]"
+        >
           {cards.map((card, index) => {
             const image = (
               <div className="relative w-full h-full overflow-hidden">

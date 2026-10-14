@@ -31,9 +31,28 @@ export default function Home() {
   // Call Modal State
   const [isCallModalOpen, setIsCallModalOpen] = useState(false);
 
+  // Mobile Navigation Drawer State
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  // Mobile Services Active Tab State
+  const [mobileActiveService, setMobileActiveService] = useState(0);
+  const [mobileShowAllServices, setMobileShowAllServices] = useState(false);
+
   const handleOpenCallModal = () => {
     setIsCallModalOpen(true);
   };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    if (isMobileMenuOpen) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isMobileMenuOpen]);
 
   const instagramHandle = company.instagram
     ? company.instagram.replace(/^@/, '').replace(/https?:\/\/(www\.)?instagram\.com\/?/, '').replace(/\/$/, '')
@@ -337,13 +356,184 @@ export default function Home() {
               type="button"
               onClick={() => navigateToQuote()}
               className="btn btn-whatsapp"
-              style={{ padding: '9px 20px', fontSize: '0.85rem' }}
+              style={{ padding: '9px 18px', fontSize: '0.85rem' }}
             >
               💬 WhatsApp
+            </button>
+
+            {/* Mobile Hamburger Menu Toggle Button (Visible ONLY in Mobile View) */}
+            <button
+              type="button"
+              className="mobile-menu-btn"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={isMobileMenuOpen}
+            >
+              {isMobileMenuOpen ? (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              ) : (
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
+                  <line x1="4" y1="7" x2="20" y2="7" />
+                  <line x1="4" y1="12" x2="20" y2="12" />
+                  <line x1="4" y1="17" x2="20" y2="17" />
+                </svg>
+              )}
             </button>
           </div>
         </div>
       </header>
+
+      {/* MOBILE OFF-CANVAS SIDE DRAWER (Visible ONLY in Mobile View) */}
+      <div
+        className={`mobile-drawer-backdrop ${isMobileMenuOpen ? 'open' : ''}`}
+        onClick={() => setIsMobileMenuOpen(false)}
+        aria-hidden={!isMobileMenuOpen}
+      />
+
+      <aside
+        className={`mobile-side-drawer ${isMobileMenuOpen ? 'open' : ''}`}
+        aria-label="Mobile Navigation"
+      >
+        <div className="mobile-drawer-header">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <img src="/logo.png" alt="FlowerSpot" style={{ height: '36px', width: 'auto', borderRadius: '8px' }} />
+            <div>
+              <h3 style={{ fontSize: '1.1rem', margin: 0, color: 'var(--color-sage)', fontFamily: 'var(--font-serif)', fontWeight: 700 }}>
+                FlowerSpot
+              </h3>
+              <span style={{ fontSize: '0.7rem', color: 'var(--color-mauve-dark)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>
+                Events &amp; Planners
+              </span>
+            </div>
+          </div>
+          <button
+            type="button"
+            className="mobile-drawer-close"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-label="Close menu"
+          >
+            ✕
+          </button>
+        </div>
+
+        <nav className="mobile-drawer-nav">
+          <ul className="mobile-drawer-list">
+            <li>
+              <a
+                href="#backdrops"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="mobile-drawer-link"
+              >
+                <span className="mobile-link-icon">📸</span>
+                <div className="mobile-link-text">
+                  <strong>Backdrop Catalogue</strong>
+                  <span>Browse 9 event verticals &amp; setups</span>
+                </div>
+                <span className="mobile-link-arrow">→</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href="#services"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="mobile-drawer-link"
+              >
+                <span className="mobile-link-icon">👑</span>
+                <div className="mobile-link-text">
+                  <strong>Our Services</strong>
+                  <span>Complete decors, mandaps &amp; LED AV</span>
+                </div>
+                <span className="mobile-link-arrow">→</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href="#quote"
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  navigateToQuote();
+                }}
+                className="mobile-drawer-link highlight"
+              >
+                <span className="mobile-link-icon">⚡</span>
+                <div className="mobile-link-text">
+                  <strong>Get Instant Quote</strong>
+                  <span>WhatsApp quotation within 15 mins</span>
+                </div>
+                <span className="mobile-link-arrow">→</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href="#company"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="mobile-drawer-link"
+              >
+                <span className="mobile-link-icon">📍</span>
+                <div className="mobile-link-text">
+                  <strong>About &amp; Location</strong>
+                  <span>Poomarket store, timings &amp; maps</span>
+                </div>
+                <span className="mobile-link-arrow">→</span>
+              </a>
+            </li>
+            <li>
+              <a
+                href={instagramUrl}
+                target="_blank"
+                rel="noreferrer"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="mobile-drawer-link"
+              >
+                <span className="mobile-link-icon">📷</span>
+                <div className="mobile-link-text">
+                  <strong>Live Instagram Reels</strong>
+                  <span>@{instagramHandle}</span>
+                </div>
+                <span className="mobile-link-arrow">↗</span>
+              </a>
+            </li>
+          </ul>
+        </nav>
+
+        {/* Direct CTA Buttons inside Drawer */}
+        <div className="mobile-drawer-cta">
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              navigateToQuote();
+            }}
+            className="btn btn-whatsapp"
+            style={{ width: '100%', padding: '12px', fontSize: '0.9rem', marginBottom: '10px' }}
+          >
+            💬 Chat on WhatsApp
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsMobileMenuOpen(false);
+              handleOpenCallModal();
+            }}
+            className="btn btn-outline"
+            style={{ width: '100%', padding: '12px', fontSize: '0.9rem' }}
+          >
+            📞 Call: {company.phone}
+          </button>
+        </div>
+
+        <div className="mobile-drawer-footer">
+          <p style={{ margin: 0, fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+            📍 {company.address}
+          </p>
+          <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: 'var(--color-sage)', fontWeight: 600 }}>
+            {company.workingHours}
+          </p>
+        </div>
+      </aside>
 
       {/* 3. HERO SHOWCASE WITH CARD FAN CAROUSEL */}
       <section className="hero-section" style={{ padding: '40px 0 30px', overflow: 'hidden' }}>
@@ -1138,26 +1328,338 @@ export default function Home() {
         </div>
       )}
 
-      {/* 6. OUR SERVICES SECTION (POWERED BY WORKS-WHEEL - 100% CLEAN WHITE THEME & NO IMAGES) */}
-      <section id="services" style={{ background: '#FFFFFF', padding: '90px 0 70px', borderTop: '1px solid #EAE5DE', borderBottom: '1px solid #EAE5DE' }}>
+      {/* 6. OUR SERVICES SECTION */}
+      <section id="services" style={{ background: '#FFFFFF', padding: '70px 0 60px', borderTop: '1px solid #EAE5DE', borderBottom: '1px solid #EAE5DE' }}>
         <div className="container" style={{ textAlign: 'center', maxWidth: '780px', margin: '0 auto 30px' }}>
           <span className="badge badge-mauve" style={{ marginBottom: '10px' }}>What We Provide</span>
-          <h2 style={{ fontSize: '2.8rem', color: 'var(--color-sage)', margin: '10px 0 16px' }}>
+          <h2 style={{ fontSize: 'clamp(2rem, 4vw, 2.8rem)', color: 'var(--color-sage)', margin: '10px 0 16px' }}>
             Our Comprehensive Event Services
           </h2>
           <p style={{ color: 'var(--text-muted)', fontSize: '1rem', lineHeight: '1.6' }}>
-            Turn the interactive wheel or click any category to browse our nine dedicated event production and floral artistry verticals.
+            Browse all nine dedicated event production and floral artistry verticals with complete deliverables and instant quotation triggers.
           </p>
         </div>
 
-        {/* WorksWheel Showcase (Clean White Theme, NO Images) */}
-        <div style={{ width: '100%', height: '620px', position: 'relative' }}>
+        {/* Desktop View: Interactive 3D WorksWheel (Hidden on Mobile) */}
+        <div className="services-desktop-wheel" style={{ width: '100%', height: '620px', position: 'relative' }}>
           <WorksWheel
             items={servicesWheelItems}
             label="Our Services"
             action="Get Instant Quote"
             onItemAction={(item) => navigateToQuote(item.title, '', `Inquiring about ${item.title} service: ${item.description || ''}`)}
           />
+        </div>
+
+        {/* Mobile View: Dedicated Full-Detail Services Cards Showcase (Visible ONLY on Mobile/Tablet) */}
+        <div className="services-mobile-showcase" style={{ padding: '0 16px' }}>
+          {/* Quick Category Selector Chips */}
+          <div style={{
+            display: 'flex',
+            overflowX: 'auto',
+            gap: '8px',
+            paddingBottom: '14px',
+            marginBottom: '16px',
+            scrollbarWidth: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}>
+            {CATEGORIES.map((cat, idx) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setMobileActiveService(idx)}
+                style={{
+                  flexShrink: 0,
+                  padding: '9px 16px',
+                  borderRadius: '24px',
+                  fontSize: '0.84rem',
+                  fontWeight: mobileActiveService === idx ? '700' : '500',
+                  background: mobileActiveService === idx ? 'var(--color-sage)' : '#FAF8F5',
+                  color: mobileActiveService === idx ? '#FFFFFF' : 'var(--color-sage)',
+                  border: mobileActiveService === idx ? '1px solid var(--color-sage)' : '1px solid var(--border-subtle)',
+                  cursor: 'pointer',
+                  boxShadow: mobileActiveService === idx ? '0 4px 12px rgba(38, 56, 43, 0.2)' : 'none',
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                {cat.icon} {cat.name}
+              </button>
+            ))}
+          </div>
+
+          {/* Active Featured Service Card with ALL details fully visible */}
+          {(() => {
+            const currentCat = CATEGORIES[mobileActiveService] || CATEGORIES[0];
+            return (
+              <div style={{
+                background: '#FFFFFF',
+                borderRadius: '20px',
+                border: '2px solid rgba(197, 160, 89, 0.35)',
+                boxShadow: '0 14px 35px rgba(38, 56, 43, 0.1)',
+                padding: '24px 20px',
+                position: 'relative'
+              }}>
+                {/* Header: Icon, Badge & Counter */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '12px',
+                      background: '#EDF3ED',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.4rem',
+                      boxShadow: '0 2px 8px rgba(38, 56, 43, 0.08)'
+                    }}>
+                      {currentCat.icon}
+                    </div>
+                    <span style={{
+                      fontSize: '0.72rem',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.08em',
+                      fontWeight: 700,
+                      padding: '4px 10px',
+                      borderRadius: '20px',
+                      background: '#FAF6ED',
+                      color: '#8C6D3B',
+                      border: '1px solid rgba(197, 160, 89, 0.35)'
+                    }}>
+                      {currentCat.badge}
+                    </span>
+                  </div>
+                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-light)' }}>
+                    {mobileActiveService + 1} of {CATEGORIES.length}
+                  </span>
+                </div>
+
+                {/* Service Title */}
+                <h3 style={{
+                  fontSize: '1.35rem',
+                  color: 'var(--color-sage)',
+                  fontFamily: 'var(--font-serif)',
+                  fontWeight: 700,
+                  margin: '0 0 10px',
+                  lineHeight: 1.25
+                }}>
+                  {currentCat.name}
+                </h3>
+
+                {/* Full Overview Description (100% visible, not clamped) */}
+                <p style={{
+                  fontSize: '0.9rem',
+                  lineHeight: '1.65',
+                  color: '#4A574E',
+                  margin: '0 0 18px',
+                  background: '#FAF8F5',
+                  padding: '12px 14px',
+                  borderRadius: '12px',
+                  border: '1px solid #F0ECE1'
+                }}>
+                  {currentCat.serviceDesc}
+                </p>
+
+                {/* Deliverables Checklist (All details visible) */}
+                <div style={{ marginBottom: '20px' }}>
+                  <h4 style={{
+                    fontSize: '0.8rem',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.08em',
+                    color: 'var(--color-sage)',
+                    fontWeight: 700,
+                    margin: '0 0 10px'
+                  }}>
+                    Included Deliverables &amp; Specialties:
+                  </h4>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {currentCat.highlights.map((hl, hIdx) => (
+                      <li key={hIdx} style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        fontSize: '0.86rem',
+                        color: 'var(--color-sage)',
+                        fontWeight: 500
+                      }}>
+                        <span style={{
+                          width: '20px',
+                          height: '20px',
+                          borderRadius: '50%',
+                          background: '#E8F5E9',
+                          color: '#2E7D32',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          flexShrink: 0
+                        }}>
+                          ✓
+                        </span>
+                        <span>{hl}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                {/* Direct Action Trigger */}
+                <button
+                  type="button"
+                  onClick={() => navigateToQuote(currentCat.name, '', `Inquiring for ${currentCat.name}: ${currentCat.serviceDesc}`)}
+                  className="btn btn-gold"
+                  style={{
+                    width: '100%',
+                    padding: '14px',
+                    fontSize: '0.95rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    marginBottom: '14px'
+                  }}
+                >
+                  ⚡ Get Instant Quote for {currentCat.name} →
+                </button>
+
+                {/* Card Navigation Controls */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingTop: '12px',
+                  borderTop: '1px solid #F0ECE1'
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => setMobileActiveService((prev) => (prev > 0 ? prev - 1 : CATEGORIES.length - 1))}
+                    style={{
+                      background: '#FAF8F5',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '10px',
+                      padding: '8px 14px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: 'var(--color-sage)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    ← Previous
+                  </button>
+
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    {CATEGORIES.map((_, dotIdx) => (
+                      <button
+                        key={dotIdx}
+                        type="button"
+                        onClick={() => setMobileActiveService(dotIdx)}
+                        style={{
+                          width: mobileActiveService === dotIdx ? '18px' : '6px',
+                          height: '6px',
+                          borderRadius: '3px',
+                          background: mobileActiveService === dotIdx ? 'var(--color-gold)' : 'rgba(38, 56, 43, 0.2)',
+                          border: 'none',
+                          padding: 0,
+                          cursor: 'pointer',
+                          transition: 'all 0.2s ease'
+                        }}
+                        aria-label={`Go to service ${dotIdx + 1}`}
+                      />
+                    ))}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setMobileActiveService((prev) => (prev < CATEGORIES.length - 1 ? prev + 1 : 0))}
+                    style={{
+                      background: '#FAF8F5',
+                      border: '1px solid var(--border-subtle)',
+                      borderRadius: '10px',
+                      padding: '8px 14px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: 'var(--color-sage)',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Next →
+                  </button>
+                </div>
+              </div>
+            );
+          })()}
+
+          {/* Toggle button to see all 9 cards stacked */}
+          <div style={{ textAlign: 'center', marginTop: '16px' }}>
+            <button
+              type="button"
+              onClick={() => setMobileShowAllServices(!mobileShowAllServices)}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: 'var(--color-sage)',
+                fontSize: '0.86rem',
+                fontWeight: 600,
+                textDecoration: 'underline',
+                cursor: 'pointer',
+                padding: '6px 12px'
+              }}
+            >
+              {mobileShowAllServices ? '▲ Collapse Services List' : '▼ View All 9 Services in a List'}
+            </button>
+          </div>
+
+          {/* All 9 Services Stack (Shown when user expands) */}
+          {mobileShowAllServices && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginTop: '16px' }}>
+              {CATEGORIES.map((cat) => (
+                <div
+                  key={cat.id}
+                  style={{
+                    background: '#FAF8F5',
+                    borderRadius: '16px',
+                    border: '1.5px solid var(--border-subtle)',
+                    padding: '18px 16px'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '1.2rem' }}>{cat.icon}</span>
+                      <strong style={{ fontSize: '1.05rem', color: 'var(--color-sage)' }}>{cat.name}</strong>
+                    </div>
+                    <span style={{
+                      fontSize: '0.68rem',
+                      fontWeight: 600,
+                      padding: '3px 8px',
+                      borderRadius: '12px',
+                      background: '#FAF6ED',
+                      color: '#8C6D3B'
+                    }}>
+                      {cat.badge}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', lineHeight: '1.55', margin: '0 0 12px' }}>
+                    {cat.serviceDesc}
+                  </p>
+                  <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 14px', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {cat.highlights.map((hl, hlIdx) => (
+                      <li key={hlIdx} style={{ fontSize: '0.8rem', color: 'var(--color-sage)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ color: 'var(--color-gold)', fontWeight: 700 }}>✓</span>
+                        <span>{hl}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button
+                    type="button"
+                    onClick={() => navigateToQuote(cat.name, '', `Inquiring for ${cat.name}`)}
+                    className="btn btn-outline"
+                    style={{ width: '100%', padding: '10px', fontSize: '0.85rem' }}
+                  >
+                    Select {cat.name} &amp; Quote →
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
