@@ -125,19 +125,19 @@ export function WorksWheel({
     const isTablet = w >= 640 && w < 1024;
 
     // Card width adapted dynamically to viewport:
-    // On mobile (< 640px): 86% of stage width, capped between 285px and 360px
-    // On tablet (640px - 1024px): 56% of stage width, capped at 420px
-    // On desktop (>= 1024px): 42% of stage width, capped at 460px
+    // On mobile (< 640px): 88% of stage width, capped between 290px and 380px
+    // On tablet (640px - 1024px): 58% of stage width, capped at 440px
+    // On desktop (>= 1024px): 42% of stage width, capped at 480px
     const cardW = isMobile
-      ? Math.min(Math.max(w * 0.86, 285), 360)
+      ? Math.min(Math.max(w * 0.88, 290), 380)
       : isTablet
-      ? Math.min(w * 0.56, 420)
-      : Math.min(w * 0.42, 460);
+      ? Math.min(w * 0.58, 440)
+      : Math.min(w * 0.42, 480);
 
     // Card height adapted so all contents (header, title, description, 4 deliverables, CTA) fit comfortably without clipping:
     const cardH = isMobile
-      ? Math.min(Math.max(h * 0.53, 305), 335)
-      : Math.min(Math.max(h * 0.53, 315), 345);
+      ? Math.min(Math.max(h * 0.56, 335), 375)
+      : Math.min(Math.max(h * 0.54, 330), 370);
 
     const drumR = cardH * DRUM;
     const ringR = cardH * RING_R;
@@ -226,6 +226,23 @@ export function WorksWheel({
     [last],
   );
 
+  // Automatically bloom into the 3D drum on view
+  React.useEffect(() => {
+    const el = stageRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const [entry] = entries;
+        if (entry.isIntersecting && target.current === 0) {
+          to(1);
+        }
+      },
+      { threshold: 0.25 }
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [to]);
+
   React.useEffect(() => {
     const el = stageRef.current;
     if (!el) return;
@@ -262,7 +279,7 @@ export function WorksWheel({
     if (touchStartY.current === null || e.touches.length !== 1) return;
     const currentY = e.touches[0].clientY;
     const deltaY = touchStartY.current - currentY;
-    to(target.current + deltaY / (DRAG_UNITS * 0.75));
+    to(target.current + deltaY / (DRAG_UNITS * 0.7));
     touchStartY.current = currentY;
   };
 
@@ -280,7 +297,7 @@ export function WorksWheel({
     <section
       aria-label={label}
       className={cn(
-        "bg-white text-[#26382B] relative h-full min-h-[34rem] md:min-h-[38rem] w-full overflow-hidden select-none border-y border-[#EAE5DE]",
+        "bg-white text-[#26382B] relative h-full min-h-[35rem] md:min-h-[38rem] w-full overflow-hidden select-none border-y border-[#EAE5DE]",
         className,
       )}
       {...props}
@@ -355,7 +372,7 @@ export function WorksWheel({
                     marginTop: -metrics.cardH / 2,
                   }}
                 >
-                  {/* Clean Service Info Card (White Background, Complete Details Visible) */}
+                  {/* Clean Service Info Card (White Background, Complete Details 100% Visible) */}
                   <div className="bg-white border-2 border-[#E7E1D8] shadow-[0_16px_40px_rgba(38,56,43,0.12)] relative flex flex-col justify-between size-full overflow-hidden rounded-2xl p-4 sm:p-5 text-left select-none transition-all duration-300 hover:border-[#C5A059] hover:shadow-[0_20px_50px_rgba(197,160,89,0.2)]">
                     <div>
                       {/* Top Header: Icon & Badge */}
@@ -364,35 +381,35 @@ export function WorksWheel({
                           {item.icon || "✨"}
                         </div>
                         {item.badge && (
-                          <span className="text-[0.65rem] sm:text-[0.7rem] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-full bg-[#FAF6ED] text-[#8C6D3B] border border-[#C5A059]/30">
+                          <span className="text-[0.66rem] sm:text-[0.72rem] uppercase tracking-wider font-bold px-2.5 py-0.5 rounded-full bg-[#FAF6ED] text-[#8C6D3B] border border-[#C5A059]/30">
                             {item.badge}
                           </span>
                         )}
                       </div>
 
                       {/* Service Title */}
-                      <h3 className="text-[1.05rem] sm:text-lg font-serif font-bold text-[#26382B] mb-1.5 leading-snug">
+                      <h3 className="text-[1.08rem] sm:text-lg md:text-xl font-serif font-bold text-[#26382B] mb-1.5 leading-snug">
                         {item.title}
                       </h3>
 
-                      {/* Overview Description (Fully visible, comfortable reading size) */}
+                      {/* Complete Overview Description (No line clamp, fully readable) */}
                       {item.description && (
-                        <p className="text-[0.76rem] sm:text-[0.8rem] text-[#556358] leading-relaxed mb-2.5 line-clamp-3 sm:line-clamp-none">
+                        <p className="text-[0.78rem] sm:text-[0.84rem] text-[#556358] leading-relaxed mb-2.5 sm:mb-3">
                           {item.description}
                         </p>
                       )}
 
-                      {/* Key Deliverables List (All 4 items clearly visible with checkmarks) */}
+                      {/* Key Deliverables List (All deliverables visible with checkmarks, no truncation) */}
                       {item.highlights && item.highlights.length > 0 && (
                         <div className="border-t border-dashed border-[#EAE5DE] pt-2 mb-1">
-                          <div className="text-[0.66rem] uppercase tracking-wider text-[#8A978E] font-bold mb-1">
+                          <div className="text-[0.66rem] uppercase tracking-wider text-[#8A978E] font-bold mb-1.5">
                             Key Deliverables:
                           </div>
-                          <ul className="space-y-0.5 sm:space-y-1 text-[0.72rem] sm:text-[0.76rem] text-[#3C5542]">
+                          <ul className="space-y-1 text-[0.73rem] sm:text-[0.78rem] text-[#3C5542]">
                             {item.highlights.map((hl, idx) => (
-                              <li key={idx} className="flex items-center gap-1.5 leading-tight">
-                                <span className="text-[#C5A059] font-bold text-xs flex-shrink-0">✓</span>
-                                <span className="truncate">{hl}</span>
+                              <li key={idx} className="flex items-start gap-1.5 leading-tight">
+                                <span className="text-[#C5A059] font-bold text-xs flex-shrink-0 mt-0.5">✓</span>
+                                <span className="break-words">{hl}</span>
                               </li>
                             ))}
                           </ul>
@@ -408,14 +425,14 @@ export function WorksWheel({
                           e.stopPropagation();
                           if (onItemAction) onItemAction(item);
                         }}
-                        className="text-[0.75rem] sm:text-[0.8rem] font-bold text-[#26382B] hover:text-[#C5A059] transition-colors flex items-center gap-1 cursor-pointer bg-[#FAF6ED] hover:bg-[#F4ECE0] px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-[#C5A059]/30"
+                        className="text-[0.76rem] sm:text-[0.82rem] font-bold text-[#26382B] hover:text-[#C5A059] transition-colors flex items-center gap-1 cursor-pointer bg-[#FAF6ED] hover:bg-[#F4ECE0] px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-lg border border-[#C5A059]/30"
                       >
                         <span>{action}</span>
-                        <svg className="w-3 h-3 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                        <svg className="w-3.5 h-3.5 transition-transform group-hover:translate-x-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                           <path d="M5 12h14M12 5l7 7-7 7" />
                         </svg>
                       </button>
-                      <span className="text-[0.65rem] sm:text-[0.68rem] uppercase tracking-wider text-[#98A29A] font-semibold">
+                      <span className="text-[0.66rem] sm:text-[0.7rem] uppercase tracking-wider text-[#98A29A] font-semibold">
                         Vertical {i + 1}/{count}
                       </span>
                     </div>

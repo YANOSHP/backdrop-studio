@@ -1338,7 +1338,7 @@ export default function Home() {
         </div>
 
         {/* Interactive 3D Spiral WorksWheel (Unified across Laptop, Tablet, and Mobile views) */}
-        <div style={{ width: '100%', height: '650px', position: 'relative' }}>
+        <div style={{ width: '100%', height: '680px', position: 'relative' }}>
           <WorksWheel
             items={servicesWheelItems}
             label="Our Services"
