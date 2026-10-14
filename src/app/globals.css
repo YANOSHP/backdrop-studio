@@ -1469,26 +1469,4 @@ footer h4 {
   .mobile-menu-btn {
     display: none !important;
   }
-}
-
-/* ============================================================
-   SERVICES SECTION RESPONSIVE SHOWCASE (Full Details on Mobile)
-   ============================================================ */
-
-.services-desktop-wheel {
-  display: block;
-}
-
-.services-mobile-showcase {
-  display: none;
-}
-
-@media (max-width: 768px) {
-  .services-desktop-wheel {
-    display: none !important;
-  }
-
-  .services-mobile-showcase {
-    display: block !important;
-  }
-}
+}
