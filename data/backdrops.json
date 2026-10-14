@@ -1,0 +1,52 @@
+[
+  {
+    "id": "bd-1",
+    "title": "Royal Dusty Mauve & Rose Mandap",
+    "category": "Wedding Decorations",
+    "image": "/uploads/backdrop-1.jpg",
+    "description": "Grand floral arch crafted with pastel roses, dusty mauve satin drapes, cascading crystal chandeliers, and warm fairy lights.",
+    "dimensions": "24ft x 12ft (Customizable)",
+    "idealFor": "Luxury Weddings, Receptions & Grand Entrances",
+    "included": ["Floral arch", "Chandeliers", "Sofa set", "Stage lighting", "Side floral pillars"]
+  },
+  {
+    "id": "bd-2",
+    "title": "Heritage Jasmine & Brass Bell Mandap",
+    "category": "Wedding Decorations",
+    "image": "/uploads/backdrop-2.jpg",
+    "description": "Traditional South Indian wedding stage with hand-strung Madurai jasmine garlands, carved temple pillars, brass hanging bells, and marigold carpets.",
+    "dimensions": "20ft x 14ft",
+    "idealFor": "Muhurtham, Traditional Hindu Weddings & Temple Themes",
+    "included": ["Temple carved pillars", "Fresh jasmine strings", "Brass urlis & bells", "Havan kund setup"]
+  },
+  {
+    "id": "bd-3",
+    "title": "Sunshine Bohemian Haldi Swing",
+    "category": "Wedding Decorations",
+    "image": "/uploads/backdrop-3.jpg",
+    "description": "Vibrant festive setup with wooden swing (jhula), fresh sunflower arches, cascading yellow-orange marigolds, and colorful Bohemian floor cushions.",
+    "dimensions": "16ft x 10ft",
+    "idealFor": "Haldi Ceremony, Mehendi Celebrations & Sangeet Photocorners",
+    "included": ["Carved wooden jhula", "Sunflower & marigold arch", "Brass pots", "Floor seating cushions"]
+  },
+  {
+    "id": "bd-4",
+    "title": "Concert LED Video Wall & Line-Array Stage",
+    "category": "LED Wall",
+    "image": "/uploads/backdrop-4.jpg",
+    "description": "High-definition P3.9 LED screen backdrop with aluminum truss system, intelligent beam moving heads, and concert-grade line-array sound system.",
+    "dimensions": "32ft x 16ft (Modular panels)",
+    "idealFor": "College Cultural Fests, Corporate Annual Days & Live Music Events",
+    "included": ["HD LED video wall", "Heavy truss structure", "Moving head beam lights", "Line-array audio system"]
+  },
+  {
+    "id": "bd-5",
+    "title": "Chic Golden Ring Floral Arch",
+    "category": "Birthday Parties",
+    "image": "/uploads/backdrop-5.jpg",
+    "description": "Modern circular gold ring frame adorned with lush blush-pink hydrangeas and roses, customized warm neon lettering, and velvet seating.",
+    "dimensions": "12ft x 10ft",
+    "idealFor": "Engagements, Milestone Birthdays & Baby Showers",
+    "included": ["Circular metal ring", "Floral arrangement", "Custom neon sign", "Plush sofa", "Fairy light backdrop"]
+  }
+]
